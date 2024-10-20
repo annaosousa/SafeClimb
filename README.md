@@ -34,3 +34,7 @@ SafeClimb is a project that assists climbers with challenges related to weather 
 
 ![SafeClimb App](imagem_4.png)
 
+## Project Blog
+
+For more information and updates about the project, visit our [project blog](https://www.notion.so/SafeClimb-1d0f3d708b22440ab98bae903a1b1748).
+
