@@ -33,4 +33,3 @@ SafeClimb is a project that assists climbers with challenges related to weather 
 ![SafeClimb App](imagem_3.png)
 
 ![SafeClimb App](imagem_4.png)
-
