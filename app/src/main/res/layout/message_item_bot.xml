@@ -1,0 +1,25 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    android:gravity="start">
+
+    <ImageView
+        android:id="@+id/imgBot"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginEnd="8dp"
+        android:src="@drawable/bot" />
+
+    <TextView
+        android:id="@+id/tv_message_bot"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bot_message_background"
+        android:padding="10dp"
+        android:text="Bot message"
+        android:textColor="@android:color/black"
+        android:layout_weight="1" />
+
+</LinearLayout>

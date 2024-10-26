@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SafeClim Bot"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:paddingBottom="10dp" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="118dp"
+        android:layout_height="168dp"
+        android:layout_gravity="center_horizontal"
+        app:srcCompat="@drawable/bot"
+        tools:layout_editor_absoluteX="146dp"
+        tools:layout_editor_absoluteY="77dp"
+        tools:ignore="MissingConstraints" />
+
+    <TextView
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:text="Hey, I see you're using the Bluetooth module. If you need any assistance, feel free to reach out - I'm here to help!"
+        android:textSize="16sp"
+        android:paddingBottom="20dp" />
+
+    <Button
+        android:id="@+id/close_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="Close" />
+
+    <Button
+        android:id="@+id/needHelpe"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="I need help" />
+
+</LinearLayout>

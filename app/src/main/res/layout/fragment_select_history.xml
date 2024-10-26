@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.fragment.SelectHistoryFragment">
+
+    <TextView
+        android:id="@+id/title_safeclimb"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="History in"
+        android:textColor="#000000"
+        android:textAlignment="center"
+        android:textSize="27sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="27dp"
+        tools:ignore="MissingConstraints" />
+
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="248dp"
+        android:text="SafeClimb guides you before you do the trail, \n providing accurate weather conditions and \n alerts. Say goodbye to weather forecast \n and say hello to precision"
+        android:textAlignment="center"
+        android:textColor="#FFFFFF"
+        android:textSize="19sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/title_safeclimb"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:id="@+id/textDescription"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="104dp"
+        android:text="Are you trying to find historical weather data? \n\nPlease enter the desired \ndate and time below"
+        android:textAlignment="center"
+        android:textColor="#000000"
+        android:textSize="19sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/title_safeclimb"
+        tools:ignore="HardcodedText" />
+
+    <LinearLayout
+        android:id="@+id/linearLayoutEditTimer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="60dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@+id/textDescription"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="0dp">
+
+        <TextView
+            android:id="@+id/timer"
+            android:layout_width="30dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:drawableLeft="@drawable/ic_time"
+            android:drawablePadding="8dp"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.218"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <EditText
+            android:id="@+id/editTextTimer"
+            android:layout_width="200dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="10dp"
+            android:hint="Select a time"
+            android:focusable="false"
+            android:clickable="true"
+            android:inputType="time"
+            tools:ignore="MissingConstraints"
+            tools:layout_editor_absoluteX="136dp"
+            tools:layout_editor_absoluteY="420dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayoutEditDate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayoutEditTimer"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="0dp">
+
+        <TextView
+            android:id="@+id/calendar"
+            android:layout_width="30dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:drawableLeft="@drawable/ic_calendar"
+            android:drawablePadding="8dp"
+            android:textColor="#228B22"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.218"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <EditText
+            android:id="@+id/editDate"
+            android:layout_width="200dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="10dp"
+            android:hint="Select a date"
+            android:focusable="false"
+            android:clickable="true"
+            android:inputType="date"
+            tools:ignore="MissingConstraints"
+            tools:layout_editor_absoluteX="136dp" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/buttonFindHistory"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="84dp"
+        android:backgroundTint="#2e7d32"
+        android:text="Find history"
+        android:textColor="#FFFFFF"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayoutEditDate"
+        tools:ignore="HardcodedText,MissingConstraints" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
