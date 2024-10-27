@@ -1,5 +1,8 @@
 package com.example.myapplication.ui.fragment
 
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,10 +15,25 @@ import com.example.myapplication.R
 import com.example.myapplication.databinding.FragmentSearchBinding
 import com.example.myapplication.ui.adapter.Item
 import com.example.myapplication.ui.adapter.SearchItemAdapter
+import android.content.BroadcastReceiver
+import android.content.Intent
+import android.content.IntentFilter
 
 class SearchFragment : Fragment() {
     private var _binding: FragmentSearchBinding? = null
     private val binding get() = _binding!!
+
+    // BroadcastReceiver para monitorar o estado do Bluetooth
+    private val bluetoothReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
+                val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
+                if (state == BluetoothAdapter.STATE_ON) {
+                    showModal() // Exibe o modal quando o Bluetooth é ativado
+                }
+            }
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -28,7 +46,16 @@ class SearchFragment : Fragment() {
         // Configuração do SearchView
         setupSearchView()
 
-        showModal()
+        // Verificação inicial do Bluetooth
+        val bluetoothManager = requireContext().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        val bluetoothAdapter: BluetoothAdapter? = bluetoothManager.adapter
+        if (bluetoothAdapter != null && bluetoothAdapter.isEnabled) {
+            showModal()
+        }
+
+        // Registro do BroadcastReceiver para ouvir mudanças no estado do Bluetooth
+        val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        requireContext().registerReceiver(bluetoothReceiver, filter)
 
         // Configuração do RecyclerView
         setUpPopularMountainsRecyclerView()
@@ -42,12 +69,9 @@ class SearchFragment : Fragment() {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 query?.let {
                     val navController = findNavController()
-
-                    // Criar um bundle com a consulta
                     val bundle = Bundle().apply {
-                        putString("search_query", it) // Passar a consulta para o ResultFragment
+                        putString("search_query", it) // Passa a consulta para o ResultFragment
                     }
-
                     navController.navigate(R.id.navigation_result, bundle)
                 }
                 return true
@@ -95,6 +119,6 @@ class SearchFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        requireContext().unregisterReceiver(bluetoothReceiver) // Remove o registro do BroadcastReceiver
     }
 }
-
