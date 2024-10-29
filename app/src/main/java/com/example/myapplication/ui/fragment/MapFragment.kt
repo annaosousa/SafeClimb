@@ -1,6 +1,7 @@
 package com.example.myapplication.ui.fragment
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
@@ -16,11 +17,16 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
 import java.util.concurrent.Executors
+import org.osmdroid.config.Configuration
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 
 class MapFragment : Fragment() {
 
     private var _binding: FragmentMapBinding? = null
     private val binding get() = _binding!!
+    private lateinit var mapView: MapView
 
     companion object {
         private const val STORAGE_PERMISSION_CODE = 1001
@@ -32,8 +38,27 @@ class MapFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
 
+        Configuration.getInstance().osmdroidBasePath = File(requireContext().cacheDir, "osmdroid")
+        Configuration.getInstance().osmdroidTileCache = File(requireContext().cacheDir, "osmdroid/tiles")
+
         _binding = FragmentMapBinding.inflate(inflater, container, false)
         val root: View = binding.root
+
+        // Configurar o mapa
+        Configuration.getInstance().load(requireContext(), requireContext().getSharedPreferences("prefs", Context.MODE_PRIVATE))
+        mapView = binding.mapView
+        mapView.setMultiTouchControls(true) // Permite zoom por gesto
+
+        // Centralizar o mapa em um ponto específico (exemplo: Pico do Paraná)
+        val startPoint = GeoPoint(-25.2427, -48.8395) // Coordenadas do Pico do Paraná
+        mapView.controller.setZoom(15.0) // Zoom inicial
+        mapView.controller.setCenter(startPoint)
+
+        // Adicionar um marcador no centro
+        val marker = Marker(mapView)
+        marker.position = startPoint
+        marker.title = "Pico do Paraná"
+        mapView.overlays.add(marker)
 
         // Configurar ação do botão de download
         binding.buttonFindHistory.setOnClickListener {
