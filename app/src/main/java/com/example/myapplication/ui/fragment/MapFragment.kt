@@ -3,8 +3,10 @@ package com.example.myapplication.ui.fragment
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.os.Bundle
-import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,20 +18,48 @@ import com.example.myapplication.databinding.FragmentMapBinding
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
-import java.util.concurrent.Executors
 import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.modules.SqliteArchiveTileWriter
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import java.net.HttpURLConnection
 
 class MapFragment : Fragment() {
 
     private var _binding: FragmentMapBinding? = null
     private val binding get() = _binding!!
     private lateinit var mapView: MapView
+    private lateinit var locationManager: LocationManager
+    private lateinit var titleWriter: SqliteArchiveTileWriter
 
     companion object {
         private const val STORAGE_PERMISSION_CODE = 1001
+    }
+
+    // Listener de localização como uma instância anônima
+    private val locationListener = object : LocationListener {
+        override fun onLocationChanged(location: Location) {
+            val currentLocation = GeoPoint(location.latitude, location.longitude)
+            mapView.controller.setCenter(currentLocation)
+            mapView.controller.setZoom(15.0)
+
+            // Adiciona um marcador na localização atual
+            val marker = Marker(mapView)
+            marker.position = currentLocation
+            marker.title = "Você está aqui"
+            mapView.overlays.clear()
+            mapView.overlays.add(marker)
+
+            // Baixar os tiles ao redor da localização atual para uso offline
+            downloadTilesAround(currentLocation)
+        }
+
+        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
+        override fun onProviderEnabled(provider: String) {}
+        override fun onProviderDisabled(provider: String) {}
     }
 
     override fun onCreateView(
@@ -37,109 +67,110 @@ class MapFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
-        Configuration.getInstance().osmdroidBasePath = File(requireContext().cacheDir, "osmdroid")
-        Configuration.getInstance().osmdroidTileCache = File(requireContext().cacheDir, "osmdroid/tiles")
-
         _binding = FragmentMapBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
         // Configurar o mapa
+
+        Configuration.getInstance().osmdroidBasePath = File(requireContext().cacheDir, "osmdroid")
+        Configuration.getInstance().osmdroidTileCache = File(requireContext().cacheDir, "osmdroid/tiles")
         Configuration.getInstance().load(requireContext(), requireContext().getSharedPreferences("prefs", Context.MODE_PRIVATE))
         mapView = binding.mapView
+        mapView.setTileSource(TileSourceFactory.MAPNIK)
         mapView.setMultiTouchControls(true) // Permite zoom por gesto
 
-        // Centralizar o mapa em um ponto específico (exemplo: Pico do Paraná)
-        val startPoint = GeoPoint(-25.2427, -48.8395) // Coordenadas do Pico do Paraná
-        mapView.controller.setZoom(15.0) // Zoom inicial
-        mapView.controller.setCenter(startPoint)
-
-        // Adicionar um marcador no centro
-        val marker = Marker(mapView)
-        marker.position = startPoint
-        marker.title = "Pico do Paraná"
-        mapView.overlays.add(marker)
-
-        // Configurar ação do botão de download
-        binding.buttonFindHistory.setOnClickListener {
-            if (checkPermission()) {
-                downloadMap()
-            } else {
-                requestStoragePermission()
-            }
+        // Inicializar o gerenciador de localização
+        locationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000L, 10f, locationListener)
+        } else {
+            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
         }
 
         return root
     }
 
-    private fun checkPermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            requireContext(),
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun requestStoragePermission() {
-        ActivityCompat.requestPermissions(
-            requireActivity(),
-            arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-            STORAGE_PERMISSION_CODE
+    private fun downloadTilesAround(center: GeoPoint) {
+        val boundingBox = BoundingBox(
+            center.latitude + 0.05,
+            center.longitude + 0.05,
+            center.latitude - 0.05,
+            center.longitude - 0.05
         )
-    }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == STORAGE_PERMISSION_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                downloadMap()
-            } else {
-                Toast.makeText(
-                    requireContext(),
-                    "Permission denied. Can't download the map.",
-                    Toast.LENGTH_SHORT
-                ).show()
+        // Inicie o download e armazenamento dos tiles ao redor da localização atual
+        val tileFile = File(requireContext().cacheDir, "osmdroid/tiles.sqlite")
+        val tileWriter = SqliteArchiveTileWriter(tileFile.absolutePath)
+        val provider = mapView.tileProvider.tileSource
+
+        // Definir a faixa de zoom para o download dos tiles
+        for (zoom in 12..15) {
+            val tileIndices = getTileIndicesInBoundingBox(boundingBox, zoom)
+            for ((x, y) in tileIndices) {
+                val tileUrl = getTileUrl(x, y, zoom)
+                downloadTile(tileUrl, zoom, x, y)
             }
         }
+
+        Toast.makeText(requireContext(), "Tiles baixados para visualização offline", Toast.LENGTH_SHORT).show()
     }
 
-    private fun downloadMap() {
-        // URL do arquivo que será baixado
-        val mapUrl = "https://example.com/map.pdf" // Substitua pela URL do arquivo real
+    private fun getTileIndicesInBoundingBox(boundingBox: BoundingBox, zoom: Int): List<Pair<Int, Int>> {
+        val tileIndices = mutableListOf<Pair<Int, Int>>()
 
-        // Diretório de destino
-        val downloadDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val northWest = GeoPoint(boundingBox.latNorth, boundingBox.lonWest)
+        val southEast = GeoPoint(boundingBox.latSouth, boundingBox.lonEast)
 
-        val fileName = "map.pdf"
-        val file = File(downloadDirectory, fileName)
+        val xStart = long2tileX(northWest.longitude, zoom)
+        val xEnd = long2tileX(southEast.longitude, zoom)
+        val yStart = lat2tileY(northWest.latitude, zoom)
+        val yEnd = lat2tileY(southEast.latitude, zoom)
 
-        // Iniciar download em thread separada
-        Executors.newSingleThreadExecutor().execute {
-            try {
-                val url = URL(mapUrl)
-                url.openStream().use { input ->
-                    FileOutputStream(file).use { output ->
+        for (x in xStart..xEnd) {
+            for (y in yStart..yEnd) {
+                tileIndices.add(Pair(x, y))
+            }
+        }
+        return tileIndices
+    }
+
+    private fun getTileUrl(x: Int, y: Int, zoom: Int): String {
+        return "https://tile.openstreetmap.org/$zoom/$x/$y.png"
+    }
+
+    private fun downloadTile(url: String, zoom: Int, x: Int, y: Int) {
+        try {
+            val connection = URL(url).openConnection() as HttpURLConnection
+            connection.connect()
+
+            if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                val tileFile = File(requireContext().cacheDir, "osmdroid/tiles/$zoom/$x/$y.png")
+                tileFile.parentFile?.mkdirs()
+
+                connection.inputStream.use { input ->
+                    FileOutputStream(tileFile).use { output ->
                         input.copyTo(output)
                     }
                 }
-
-                requireActivity().runOnUiThread {
-                    Toast.makeText(requireContext(), "Map downloaded successfully!", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                requireActivity().runOnUiThread {
-                    Toast.makeText(requireContext(), "Failed to download map.", Toast.LENGTH_SHORT).show()
-                }
             }
+            connection.disconnect()
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
+    }
+
+    private fun long2tileX(lon: Double, zoom: Int): Int {
+        return ((lon + 180) / 360 * (1 shl zoom)).toInt()
+    }
+
+    private fun lat2tileY(lat: Double, zoom: Int): Int {
+        val radLat = Math.toRadians(lat)
+        return ((1.0 - Math.log(Math.tan(radLat) + 1 / Math.cos(radLat)) / Math.PI) / 2 * (1 shl zoom)).toInt()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        locationManager.removeUpdates(locationListener)
         _binding = null
     }
 }
