@@ -26,7 +26,16 @@ class ResultFragment : Fragment() {
         val imageResourceId = arguments?.getInt("image_resource_id")
 
         binding.resultTextView.text = mountainDescription
+        binding.resultTextView.text = mountainName
         imageResourceId?.let { binding.imagePlaceholder.setImageResource(it) }
+
+        binding.viewMap.setOnClickListener {
+            // Passando o nome da montanha como argumento para o MapMountainFragment
+            val bundle = Bundle().apply {
+                putString("selected_mountain", mountainName)
+            }
+            findNavController().navigate(R.id.navigation_map_mountain, bundle)
+        }
 
         val query = arguments?.getString("search_query") // Obtendo a string passada
         binding.resultTextView.text = query
@@ -36,10 +45,6 @@ class ResultFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        binding.viewMap.setOnClickListener {
-            findNavController().navigate(R.id.navigation_map)
-        }
 
         binding.viewHistory.setOnClickListener {
             findNavController().navigate(R.id.navigation_history)

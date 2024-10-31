@@ -24,6 +24,12 @@
         tools:layout="@layout/fragment_map" />
 
     <fragment
+        android:id="@+id/navigation_map_mountain"
+        android:name="com.example.myapplication.ui.fragment.MapMountainFragment"
+        android:label="Map Mountain"
+        tools:layout="@layout/fragment_map_mountain" />
+
+    <fragment
         android:id="@+id/navigation_faq"
         android:name="com.example.myapplication.ui.fragment.FaqFragment"
         android:label="@string/title_faq"

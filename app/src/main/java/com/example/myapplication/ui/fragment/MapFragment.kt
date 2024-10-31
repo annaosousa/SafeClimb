@@ -14,10 +14,12 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.example.myapplication.R
 import com.example.myapplication.databinding.FragmentMapBinding
-import java.io.File
-import java.io.FileOutputStream
-import java.net.URL
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.modules.SqliteArchiveTileWriter
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -25,7 +27,10 @@ import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import java.io.File
+import java.io.FileOutputStream
 import java.net.HttpURLConnection
+import java.net.URL
 
 class MapFragment : Fragment() {
 
@@ -33,27 +38,31 @@ class MapFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var mapView: MapView
     private lateinit var locationManager: LocationManager
-    private lateinit var titleWriter: SqliteArchiveTileWriter
+    private var userMarker: Marker? = null // Para armazenar o marcador do usuário
 
-    companion object {
-        private const val STORAGE_PERMISSION_CODE = 1001
-    }
-
-    // Listener de localização como uma instância anônima
+    // Listener de localização
     private val locationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
             val currentLocation = GeoPoint(location.latitude, location.longitude)
             mapView.controller.setCenter(currentLocation)
             mapView.controller.setZoom(15.0)
 
-            // Adiciona um marcador na localização atual
-            val marker = Marker(mapView)
-            marker.position = currentLocation
-            marker.title = "Você está aqui"
-            mapView.overlays.clear()
-            mapView.overlays.add(marker)
+            // Configura o marcador do usuário para exibir o ícone de "mãozinha"
+            if (userMarker == null) {
+                userMarker = Marker(mapView).apply {
+                    title = "Você está aqui"
+                    position = currentLocation
+                    icon = ContextCompat.getDrawable(requireContext(), R.drawable.arrow_map_icon) // Ícone de "mãozinha"
+                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    mapView.overlays.add(this)
+                }
+            } else {
+                userMarker?.position = currentLocation
+            }
 
-            // Baixar os tiles ao redor da localização atual para uso offline
+            mapView.invalidate() // Atualiza a visualização do mapa
+
+            // Baixar os tiles ao redor da localização atual
             downloadTilesAround(currentLocation)
         }
 
@@ -71,19 +80,26 @@ class MapFragment : Fragment() {
         val root: View = binding.root
 
         // Configurar o mapa
-
         Configuration.getInstance().osmdroidBasePath = File(requireContext().cacheDir, "osmdroid")
         Configuration.getInstance().osmdroidTileCache = File(requireContext().cacheDir, "osmdroid/tiles")
         Configuration.getInstance().load(requireContext(), requireContext().getSharedPreferences("prefs", Context.MODE_PRIVATE))
         mapView = binding.mapView
         mapView.setTileSource(TileSourceFactory.MAPNIK)
-        mapView.setMultiTouchControls(true) // Permite zoom por gesto
+        mapView.setMultiTouchControls(true)
 
         // Inicializar o gerenciador de localização
         locationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            // Obter a última localização conhecida
+            val lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+            lastKnownLocation?.let {
+                val currentLocation = GeoPoint(it.latitude, it.longitude)
+                mapView.controller.setCenter(currentLocation)
+                mapView.controller.setZoom(15.0)
+            }
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000L, 10f, locationListener)
         } else {
+            Toast.makeText(requireContext(), "Permissão de localização necessária!", Toast.LENGTH_SHORT).show()
             ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
         }
 
@@ -98,21 +114,23 @@ class MapFragment : Fragment() {
             center.longitude - 0.05
         )
 
-        // Inicie o download e armazenamento dos tiles ao redor da localização atual
-        val tileFile = File(requireContext().cacheDir, "osmdroid/tiles.sqlite")
-        val tileWriter = SqliteArchiveTileWriter(tileFile.absolutePath)
-        val provider = mapView.tileProvider.tileSource
+        CoroutineScope(Dispatchers.IO).launch {
+            val tileFile = File(requireContext().cacheDir, "osmdroid/tiles.sqlite")
+            val tileWriter = SqliteArchiveTileWriter(tileFile.absolutePath)
 
-        // Definir a faixa de zoom para o download dos tiles
-        for (zoom in 12..15) {
-            val tileIndices = getTileIndicesInBoundingBox(boundingBox, zoom)
-            for ((x, y) in tileIndices) {
-                val tileUrl = getTileUrl(x, y, zoom)
-                downloadTile(tileUrl, zoom, x, y)
+            // Definir a faixa de zoom para o download dos tiles
+            for (zoom in 12..15) {
+                val tileIndices = getTileIndicesInBoundingBox(boundingBox, zoom)
+                for ((x, y) in tileIndices) {
+                    val tileUrl = getTileUrl(x, y, zoom)
+                    downloadTile(tileUrl, zoom, x, y)
+                }
+            }
+
+            withContext(Dispatchers.Main) {
+                Toast.makeText(requireContext(), "Tiles baixados para visualização offline", Toast.LENGTH_SHORT).show()
             }
         }
-
-        Toast.makeText(requireContext(), "Tiles baixados para visualização offline", Toast.LENGTH_SHORT).show()
     }
 
     private fun getTileIndicesInBoundingBox(boundingBox: BoundingBox, zoom: Int): List<Pair<Int, Int>> {
