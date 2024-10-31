@@ -8,7 +8,6 @@
         android:id="@+id/title_result"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Current weather in \nlocation"
         android:textAlignment="center"
         android:textColor="#000000"
         android:textSize="27sp"

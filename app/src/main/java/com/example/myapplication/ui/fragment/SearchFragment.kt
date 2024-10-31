@@ -18,6 +18,7 @@ import com.example.myapplication.ui.adapter.SearchItemAdapter
 import android.content.BroadcastReceiver
 import android.content.Intent
 import android.content.IntentFilter
+import android.widget.Toast
 
 class SearchFragment : Fragment() {
     private var _binding: FragmentSearchBinding? = null
@@ -67,12 +68,41 @@ class SearchFragment : Fragment() {
     private fun setupSearchView() {
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                query?.let {
+                query?.let { searchQuery ->
                     val navController = findNavController()
-                    val bundle = Bundle().apply {
-                        putString("search_query", it) // Passa a consulta para o ResultFragment
+
+                    // Normaliza a pesquisa para minúsculas
+                    val normalizedQuery = searchQuery.trim().toLowerCase()
+
+                    // Busca a montanha pelo nome no mapa de montanhas
+                    val mountain = SearchItemAdapter.mountainMap.entries.firstOrNull {
+                        it.key.toLowerCase() == normalizedQuery
+                    }?.value
+
+                    if (mountain != null) {
+                        val imageResourceId = when (mountain.name) {
+                            "Pico do Paraná" -> R.drawable.pico_do_parana
+                            "Pico Marumbi" -> R.drawable.pico_marumbi
+                            "Morro do Anhangava" -> R.drawable.morro_do_anhangava
+                            "Pico do Caratuva" -> R.drawable.pico_do_caratuva
+                            "Morro do Araçatuba" -> R.drawable.morro_do_aracutuba
+                            "Morro do Canal" -> R.drawable.morro_do_canal
+                            else -> R.drawable.default_image // imagem padrão
+                        }
+
+                        val bundle = Bundle().apply {
+                            putString("mountain_name", mountain.name)
+                            putString("mountain_description", mountain.description)
+                            putInt("image_resource_id", imageResourceId)
+                        }
+                        navController.navigate(R.id.navigation_result, bundle)
+                    } else {
+                        // Exibe uma mensagem caso a montanha não seja encontrada
+                        Toast.makeText(context, "Montanha não encontrada", Toast.LENGTH_SHORT).show()
                     }
-                    navController.navigate(R.id.navigation_result, bundle)
+
+                    binding.searchView.setQuery("", false)
+                    binding.searchView.clearFocus()
                 }
                 return true
             }

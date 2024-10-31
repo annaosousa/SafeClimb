@@ -1,5 +1,6 @@
 package com.example.myapplication.ui.fragment
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -21,12 +22,16 @@ class HistoryFragment : Fragment() {
     private var _binding: FragmentHistoryBinding? = null
     private val binding get() = _binding!!
 
+    @SuppressLint("SetTextI18n")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentHistoryBinding.inflate(inflater, container, false)
         val view = binding.root
+
+        val locationName = arguments?.getString("mountain_name") ?: "Default Location"
+        binding.titleHistory.text = "History in $locationName"
 
         // Initialize RecyclerView
         recyclerView = view.findViewById(R.id.recyclerViewHistory)
@@ -54,7 +59,14 @@ class HistoryFragment : Fragment() {
 
         val viewAnotherDateButton = view.findViewById<Button>(R.id.viewAnotherDate)
         viewAnotherDateButton.setOnClickListener {
-            findNavController().navigate(R.id.navigation_select_history)
+            val mountainName = arguments?.getString("mountain_name")
+
+            // Crie um bundle e passe o nome da montanha
+            val bundle = Bundle().apply {
+                putString("mountain_name", mountainName)
+            }
+
+            findNavController().navigate(R.id.navigation_select_history, bundle)
         }
     }
 

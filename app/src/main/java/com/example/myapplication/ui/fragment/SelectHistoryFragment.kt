@@ -16,6 +16,7 @@ class SelectHistoryFragment : Fragment() {
 
     private var _binding: FragmentSelectHistoryBinding? = null
     private val binding get() = _binding!!
+    private var mountainName: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -24,6 +25,9 @@ class SelectHistoryFragment : Fragment() {
     ): View {
         _binding = FragmentSelectHistoryBinding.inflate(inflater, container, false)
         val root: View = binding.root
+
+        mountainName = arguments?.getString("mountain_name")
+        binding.titleSelectHistory.text = "Select history for $mountainName"
 
         setupListeners()
 

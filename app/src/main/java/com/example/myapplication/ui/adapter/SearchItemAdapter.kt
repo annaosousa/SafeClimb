@@ -60,5 +60,17 @@ class SearchItemAdapter(private val items: List<Item>) : RecyclerView.Adapter<Se
     override fun getItemCount(): Int {
         return items.size
     }
+
+    companion object {
+        // Mapa de montanhas, onde a chave é o nome da montanha e o valor é um Item com detalhes
+        val mountainMap = mapOf(
+            "Pico do Paraná" to Item("Pico do Paraná", "Montanha mais popular"),
+            "Pico Marumbi" to Item("Pico Marumbi", "Outra montanha popular"),
+            "Morro do Anhangava" to Item("Morro do Anhangava", "Mais uma popular"),
+            "Pico do Caratuva" to Item("Pico do Caratuva", "Descrição da montanha 1"),
+            "Morro do Araçatuba" to Item("Morro do Araçatuba", "Descrição da montanha 2"),
+            "Morro do Canal" to Item("Morro do Canal", "Descrição da montanha 3")
+        )
+    }
 }
 

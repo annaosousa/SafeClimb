@@ -21,6 +21,6 @@
         android:layout_height="24dp"
         android:layout_marginStart="5dp"
         android:layout_gravity="center_vertical"
-        android:src="@drawable/person" />
+        android:src="@drawable/person_user" />
 </LinearLayout>
 

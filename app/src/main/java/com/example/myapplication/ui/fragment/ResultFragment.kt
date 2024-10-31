@@ -1,5 +1,6 @@
 package com.example.myapplication.ui.fragment
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,6 +15,7 @@ class ResultFragment : Fragment() {
     private var _binding: FragmentResultBinding? = null
     private val binding get() = _binding!!
 
+    @SuppressLint("SetTextI18n")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -24,6 +26,8 @@ class ResultFragment : Fragment() {
         val mountainName = arguments?.getString("mountain_name")
         val mountainDescription = arguments?.getString("mountain_description")
         val imageResourceId = arguments?.getInt("image_resource_id")
+
+        binding.titleResult.text = "Current weather in \n$mountainName"
 
         binding.resultTextView.text = mountainDescription
         binding.resultTextView.text = mountainName
@@ -37,18 +41,18 @@ class ResultFragment : Fragment() {
             findNavController().navigate(R.id.navigation_map_mountain, bundle)
         }
 
+        binding.viewHistory.setOnClickListener {
+            // Passando o nome da montanha como argumento para o HistoryFragment
+            val bundle = Bundle().apply {
+                putString("mountain_name", mountainName)
+            }
+            findNavController().navigate(R.id.navigation_history, bundle)
+        }
+
         val query = arguments?.getString("search_query") // Obtendo a string passada
         binding.resultTextView.text = query
 
         return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        binding.viewHistory.setOnClickListener {
-            findNavController().navigate(R.id.navigation_history)
-        }
     }
 
     override fun onDestroyView() {
