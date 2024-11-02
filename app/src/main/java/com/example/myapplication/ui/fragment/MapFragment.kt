@@ -38,6 +38,7 @@ class MapFragment : Fragment() {
 
     private var _binding: FragmentMapBinding? = null
     private val binding get() = _binding!!
+    private val towers = mutableListOf<Marker>()
     private lateinit var mapView: MapView
     private lateinit var locationManager: LocationManager
     private var userMarker: Marker? = null // Para armazenar o marcador do usuário
@@ -52,7 +53,7 @@ class MapFragment : Fragment() {
             // Configura o marcador do usuário para exibir o ícone de "mãozinha"
             if (userMarker == null) {
                 userMarker = Marker(mapView).apply {
-                    title = "Você está aqui"
+                    title = "You are here"
                     position = currentLocation
                     icon = ContextCompat.getDrawable(requireContext(), R.drawable.arrow_map_icon) // Ícone de "mãozinha"
                     setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
@@ -62,26 +63,23 @@ class MapFragment : Fragment() {
                 userMarker?.position = currentLocation
             }
 
-            // Adiciona duas torres aleatórias
-            val firstTowerLocation = addRandomTower(currentLocation)
-            val secondTowerLocation = addRandomTower(currentLocation) // Chamada extra para adicionar uma segunda torre
-
-            // Calcule as distâncias para as torres
-            val distanceToFirstTower = calculateDistance(currentLocation, firstTowerLocation)
-            val distanceToSecondTower = calculateDistance(currentLocation, secondTowerLocation)
-
-            // Determine qual torre está mais próxima
-            val closestTowerLocation = if (distanceToFirstTower < distanceToSecondTower) {
-                firstTowerLocation
-            } else {
-                secondTowerLocation
+            if (towers.size < 2) {
+                towers.add(addRandomTower(currentLocation))
+                towers.add(addRandomTower(currentLocation))
             }
 
-            // Desenhe a rota apenas para a torre mais próxima
+            val distanceToFirstTower = calculateDistance(currentLocation, towers[0].position)
+            val distanceToSecondTower = calculateDistance(currentLocation, towers[1].position)
+
+            val closestTowerLocation = if (distanceToFirstTower < distanceToSecondTower) {
+                towers[0].position
+            } else {
+                towers[1].position
+            }
+
             drawRouteAndCalculateDistance(currentLocation, closestTowerLocation)
 
             mapView.invalidate()
-
             downloadTilesAround(currentLocation)
         }
 
@@ -124,13 +122,13 @@ class MapFragment : Fragment() {
         return root
     }
 
-    private fun addRandomTower(center: GeoPoint): GeoPoint {
+    private fun addRandomTower(center: GeoPoint): Marker {
         val randomLat = center.latitude + Random.nextDouble(-0.005, 0.005)
         val randomLon = center.longitude + Random.nextDouble(-0.005, 0.005)
         val towerLocation = GeoPoint(randomLat, randomLon)
 
         val randomTower = Marker(mapView).apply {
-            title = "Torre"
+            title = "Tower"
             position = towerLocation
             icon = ContextCompat.getDrawable(requireContext(), R.drawable.tower)
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
@@ -138,7 +136,7 @@ class MapFragment : Fragment() {
         }
 
         mapView.invalidate()
-        return towerLocation
+        return randomTower // Retorne o objeto Marker em vez de GeoPoint
     }
 
     private fun drawRouteAndCalculateDistance(startPoint: GeoPoint, endPoint: GeoPoint) {
@@ -150,12 +148,12 @@ class MapFragment : Fragment() {
         )
         val distanceInMeters = results[0]
 
-        Toast.makeText(requireContext(), "Distância até a torre: ${distanceInMeters.toInt()} metros", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), "Distance until tower: ${distanceInMeters.toInt()} meters", Toast.LENGTH_SHORT).show()
 
         val polyline = Polyline(mapView).apply {
             addPoint(startPoint)
             addPoint(endPoint)
-            color = ContextCompat.getColor(requireContext(), R.color.route_line) // Defina a cor desejada para a rota
+            color = ContextCompat.getColor(requireContext(), R.color.route_line)
             width = 5f
 
             setOnClickListener { polyline, mapView, geoPoint ->
@@ -171,7 +169,7 @@ class MapFragment : Fragment() {
     private fun showDistanceInfoWindow(distance: Float, lat: Double, lon: Double) {
         Marker(mapView).apply {
             position = GeoPoint(lat, lon)
-            title = "Distância: ${distance.toInt()} metros"
+            title = "Distance: ${distance.toInt()} meters"
 
             showInfoWindow()
         }
