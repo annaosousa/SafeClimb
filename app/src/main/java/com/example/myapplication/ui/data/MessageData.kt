@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.model
+package com.example.myapplication.ui.data
 
 data class Message(
     val text: String,

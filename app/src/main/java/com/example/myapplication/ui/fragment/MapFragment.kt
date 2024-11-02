@@ -39,6 +39,7 @@ class MapFragment : Fragment() {
     private var _binding: FragmentMapBinding? = null
     private val binding get() = _binding!!
     private val towers = mutableListOf<Marker>()
+    private var lastClosestTower: GeoPoint? = null
     private lateinit var mapView: MapView
     private lateinit var locationManager: LocationManager
     private var userMarker: Marker? = null // Para armazenar o marcador do usuário
@@ -50,7 +51,7 @@ class MapFragment : Fragment() {
             mapView.controller.setCenter(currentLocation)
             mapView.controller.setZoom(15.0)
 
-            // Configura o marcador do usuário para exibir o ícone de "mãozinha"
+            // Configura o marcador do usuário
             if (userMarker == null) {
                 userMarker = Marker(mapView).apply {
                     title = "You are here"
@@ -77,7 +78,11 @@ class MapFragment : Fragment() {
                 towers[1].position
             }
 
-            drawRouteAndCalculateDistance(currentLocation, closestTowerLocation)
+            // Verifica se a torre mais próxima mudou
+            if (lastClosestTower != closestTowerLocation) {
+                drawRouteAndCalculateDistance(currentLocation, closestTowerLocation)
+                lastClosestTower = closestTowerLocation // Atualiza a última torre mais próxima
+            }
 
             mapView.invalidate()
             downloadTilesAround(currentLocation)

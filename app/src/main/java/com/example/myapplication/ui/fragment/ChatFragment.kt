@@ -18,7 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.myapplication.databinding.FragmentChatBinding
 import com.example.myapplication.ui.adapter.MessageAdapter
-import com.example.myapplication.ui.model.Message
+import com.example.myapplication.ui.data.Message
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream

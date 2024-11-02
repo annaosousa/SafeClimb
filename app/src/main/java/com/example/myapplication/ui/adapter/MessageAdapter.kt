@@ -7,7 +7,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
-import com.example.myapplication.ui.model.Message
+import com.example.myapplication.ui.data.Message
 
 class MessageAdapter(private val messages: List<Message>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
