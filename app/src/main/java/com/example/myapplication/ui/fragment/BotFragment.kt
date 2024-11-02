@@ -35,11 +35,13 @@ class BotFragment : Fragment() {
 
         binding.buttonStartTheChat.setOnClickListener {
             val message = binding.editTextMessage.text.toString()
+            val phoneNumber = binding.editPhoneNumber.text.toString()
 
             if (message.isNotBlank()) {
-                // Cria um bundle para passar a mensagem
+                // Cria um bundle para passar a mensagem e telefone
                 val bundle = Bundle().apply {
                     putString("firstMessage", message)
+                    putString("phoneNumber", phoneNumber)
                 }
 
                 // Navega para o ChatFragment passando a mensagem
