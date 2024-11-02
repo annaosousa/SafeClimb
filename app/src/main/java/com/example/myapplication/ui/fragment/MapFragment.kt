@@ -20,6 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.random.Random
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.modules.SqliteArchiveTileWriter
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -27,6 +28,7 @@ import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polyline
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
@@ -60,9 +62,26 @@ class MapFragment : Fragment() {
                 userMarker?.position = currentLocation
             }
 
-            mapView.invalidate() // Atualiza a visualização do mapa
+            // Adiciona duas torres aleatórias
+            val firstTowerLocation = addRandomTower(currentLocation)
+            val secondTowerLocation = addRandomTower(currentLocation) // Chamada extra para adicionar uma segunda torre
 
-            // Baixar os tiles ao redor da localização atual
+            // Calcule as distâncias para as torres
+            val distanceToFirstTower = calculateDistance(currentLocation, firstTowerLocation)
+            val distanceToSecondTower = calculateDistance(currentLocation, secondTowerLocation)
+
+            // Determine qual torre está mais próxima
+            val closestTowerLocation = if (distanceToFirstTower < distanceToSecondTower) {
+                firstTowerLocation
+            } else {
+                secondTowerLocation
+            }
+
+            // Desenhe a rota apenas para a torre mais próxima
+            drawRouteAndCalculateDistance(currentLocation, closestTowerLocation)
+
+            mapView.invalidate()
+
             downloadTilesAround(currentLocation)
         }
 
@@ -87,7 +106,6 @@ class MapFragment : Fragment() {
         mapView.setTileSource(TileSourceFactory.MAPNIK)
         mapView.setMultiTouchControls(true)
 
-        // Inicializar o gerenciador de localização
         locationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             // Obter a última localização conhecida
@@ -104,6 +122,70 @@ class MapFragment : Fragment() {
         }
 
         return root
+    }
+
+    private fun addRandomTower(center: GeoPoint): GeoPoint {
+        val randomLat = center.latitude + Random.nextDouble(-0.005, 0.005)
+        val randomLon = center.longitude + Random.nextDouble(-0.005, 0.005)
+        val towerLocation = GeoPoint(randomLat, randomLon)
+
+        val randomTower = Marker(mapView).apply {
+            title = "Torre"
+            position = towerLocation
+            icon = ContextCompat.getDrawable(requireContext(), R.drawable.tower)
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            mapView.overlays.add(this)
+        }
+
+        mapView.invalidate()
+        return towerLocation
+    }
+
+    private fun drawRouteAndCalculateDistance(startPoint: GeoPoint, endPoint: GeoPoint) {
+        val results = FloatArray(1)
+        Location.distanceBetween(
+            startPoint.latitude, startPoint.longitude,
+            endPoint.latitude, endPoint.longitude,
+            results
+        )
+        val distanceInMeters = results[0]
+
+        Toast.makeText(requireContext(), "Distância até a torre: ${distanceInMeters.toInt()} metros", Toast.LENGTH_SHORT).show()
+
+        val polyline = Polyline(mapView).apply {
+            addPoint(startPoint)
+            addPoint(endPoint)
+            color = ContextCompat.getColor(requireContext(), R.color.route_line) // Defina a cor desejada para a rota
+            width = 5f
+
+            setOnClickListener { polyline, mapView, geoPoint ->
+                showDistanceInfoWindow(distanceInMeters, (startPoint.latitude + endPoint.latitude) / 2, (startPoint.longitude + endPoint.longitude) / 2)
+                true
+            }
+        }
+
+        mapView.overlays.add(polyline)
+        mapView.invalidate()
+    }
+
+    private fun showDistanceInfoWindow(distance: Float, lat: Double, lon: Double) {
+        Marker(mapView).apply {
+            position = GeoPoint(lat, lon)
+            title = "Distância: ${distance.toInt()} metros"
+
+            showInfoWindow()
+        }
+        mapView.invalidate()
+    }
+
+    private fun calculateDistance(startPoint: GeoPoint, endPoint: GeoPoint): Float {
+        val results = FloatArray(1)
+        Location.distanceBetween(
+            startPoint.latitude, startPoint.longitude,
+            endPoint.latitude, endPoint.longitude,
+            results
+        )
+        return results[0]
     }
 
     private fun downloadTilesAround(center: GeoPoint) {

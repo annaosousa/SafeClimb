@@ -3,4 +3,5 @@
     <color name="green">#2e7d32</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="route_line">#FF0000</color>
 </resources>
