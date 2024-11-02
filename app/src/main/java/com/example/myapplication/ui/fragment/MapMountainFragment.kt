@@ -1,12 +1,14 @@
 // MapMountainFragment.kt
 package com.example.myapplication.ui.fragment
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import com.example.myapplication.R
 import com.example.myapplication.ui.data.MountainData
 import com.example.myapplication.databinding.FragmentMapMountainBinding
 import org.osmdroid.config.Configuration
@@ -21,6 +23,7 @@ class MapMountainFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var mapView: MapView
 
+    @SuppressLint("SetTextI18n")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -40,6 +43,8 @@ class MapMountainFragment : Fragment() {
         val selectedMountain = arguments?.getString("selected_mountain")
         val coordinates = MountainData.mountains[selectedMountain]
 
+        binding.titleResult.text = "Map of \n$selectedMountain"
+
         // Centralizar o mapa nas coordenadas
         val startPoint = coordinates?.let { GeoPoint(it.first, coordinates.second) }
         mapView.controller.setZoom(15.0)
@@ -50,6 +55,16 @@ class MapMountainFragment : Fragment() {
         marker.position = startPoint
         marker.title = selectedMountain ?: "Montanha Desconhecida"
         mapView.overlays.add(marker)
+
+        // Adicionar marcadores de torres (exemplo: pontos adicionais)
+        val towerCoordinates = MountainData.towerLocations[selectedMountain]
+        towerCoordinates?.forEach { coord ->
+            val towerMarker = Marker(mapView)
+            towerMarker.position = GeoPoint(coord.first, coord.second)
+            towerMarker.icon = resources.getDrawable(R.drawable.tower, null) // Ícone personalizado da torre
+            towerMarker.title = "Torre"
+            mapView.overlays.add(towerMarker)
+        }
 
         return root
     }
