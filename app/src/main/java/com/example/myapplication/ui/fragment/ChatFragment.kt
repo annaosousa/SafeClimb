@@ -91,6 +91,9 @@ class ChatFragment : Fragment() {
 
         requestBluetoothPermissions()
 
+        binding.btnSend.isEnabled = false
+        binding.etMessage.isEnabled = false
+
         val phoneNumber = arguments?.getString("phoneNumber")
         val firstMessage = arguments?.getString("firstMessage")
 
@@ -109,7 +112,7 @@ class ChatFragment : Fragment() {
     private fun showDeviceListDialog() {
         val dialogBinding = DeviceListDialogBinding.inflate(LayoutInflater.from(context))
         val dialog = AlertDialog.Builder(requireContext())
-            .setTitle("Dispositivos Bluetooth")
+            .setTitle("Devices Bluetooth")
             .setView(dialogBinding.root)
             .create()
 
@@ -189,16 +192,39 @@ class ChatFragment : Fragment() {
     private fun connectToDevice(device: BluetoothDevice) {
         if (checkBluetoothPermissions()) {
             try {
+                showLoadingOverlay()
                 bluetoothGatt = device.connectGatt(requireContext(), false, gattCallback)
             } catch (e: SecurityException) {
                 Log.e("ChatFragment", "Permission denied: Unable to connect to device", e)
-                receiveBotMessage("Unable to connect: Bluetooth permissions are required.")
+                showConnectionErrorDialog("Unable to connect: Bluetooth permissions are required.")
             }
         } else {
-            receiveBotMessage("Bluetooth permissions not granted.")
+            showConnectionErrorDialog("Bluetooth permissions not granted.")
             requestBluetoothPermissions()
         }
     }
+
+    private var connectionErrorDialog: AlertDialog? = null
+
+    private fun showConnectionErrorDialog(message: String) {
+        hideLoadingOverlay()
+
+        if (connectionErrorDialog?.isShowing == true) return
+
+        connectionErrorDialog = AlertDialog.Builder(requireContext())
+            .setTitle("Connection error")
+            .setMessage(message)
+            .setPositiveButton("Try again") { dialogInterface, _ ->
+                dialogInterface.dismiss()
+            }
+            .setNegativeButton("Back") { dialogInterface, _ ->
+                dialogInterface.dismiss()
+            }
+            .create()
+
+        connectionErrorDialog?.show()
+    }
+
 
     private val gattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
@@ -212,10 +238,13 @@ class ChatFragment : Fragment() {
                     gatt.discoverServices()
                 } catch (e: SecurityException) {
                     Log.e("ChatFragment", "Permission denied: Unable to discover services", e)
-                    receiveBotMessage("Unable to discover services: Bluetooth permissions are required.")
+                    showConnectionErrorDialog("Unable to discover services: Bluetooth permissions are required.")
                 }
             } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                receiveBotMessage("Disconnected from ESP32.")
+                Handler(Looper.getMainLooper()).post {
+                    hideLoadingOverlay()
+                    showConnectionErrorDialog("Lost connection with ESP32.")
+                }
                 try {
                     bluetoothGatt?.close()
                 } catch (e: SecurityException) {
@@ -227,9 +256,22 @@ class ChatFragment : Fragment() {
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             val service = gatt.getService(uuidService)
             gattCharacteristic = service?.getCharacteristic(uuidCharacteristic)
-            receiveBotMessage("Connected and ready for communication.")
 
-            startListeningForMessages()
+            if (gattCharacteristic != null) {
+                Handler(Looper.getMainLooper()).post {
+                    hideLoadingOverlay()
+                    receiveBotMessage("Connected to ESP32. Ready to communication.")
+
+                    binding.btnSend.isEnabled = true
+                    binding.etMessage.isEnabled = true
+                }
+
+                startListeningForMessages()
+            } else {
+                Handler(Looper.getMainLooper()).post {
+                    showConnectionErrorDialog("Service or feature not found in ESP32.")
+                }
+            }
         }
 
         override fun onCharacteristicChanged(
@@ -280,6 +322,11 @@ class ChatFragment : Fragment() {
     }
 
     private fun sendMessage(userMessage: String) {
+        if (gattCharacteristic == null) {
+            receiveBotMessage("Waiting for Bluetooth connection to send the message.")
+            return
+        }
+
         messages.add(Message(userMessage, true))
         adapter.notifyItemInserted(messages.size - 1)
         binding.recyclerViewMessages.scrollToPosition(messages.size - 1)
