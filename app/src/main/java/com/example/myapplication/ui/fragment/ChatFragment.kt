@@ -39,6 +39,7 @@ class ChatFragment : Fragment() {
     private var _binding: FragmentChatBinding? = null
     private val binding get() = _binding!!
     private var isFirstMessageSent = false
+    private var deviceListDialog: AlertDialog? = null
 
     private val messages = mutableListOf<Message>()
     private lateinit var adapter: MessageAdapter
@@ -46,8 +47,8 @@ class ChatFragment : Fragment() {
     private val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
     private var bluetoothGatt: BluetoothGatt? = null
     private var gattCharacteristic: BluetoothGattCharacteristic? = null
-    private val uuidService: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-    private val uuidCharacteristic: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+    private val uuidService: UUID = UUID.fromString("000000ff-0000-1000-8000-00805F9B34FB")
+    private val uuidCharacteristic: UUID = UUID.fromString("0000ff01-0000-1000-8000-00805F9B34FB")
 
     companion object {
         private const val BLUETOOTH_PERMISSION_REQUEST_CODE = 1
@@ -94,24 +95,13 @@ class ChatFragment : Fragment() {
         binding.btnSend.isEnabled = false
         binding.etMessage.isEnabled = false
 
-        val phoneNumber = arguments?.getString("phoneNumber")
-        val firstMessage = arguments?.getString("firstMessage")
-
         showLoadingOverlay()
         showDeviceListDialog()
-
-        if (phoneNumber != null) {
-            sendPhoneNumberToESP32(phoneNumber)
-        }
-
-        if (firstMessage != null) {
-            sendMessage(firstMessage)
-        }
     }
 
     private fun showDeviceListDialog() {
         val dialogBinding = DeviceListDialogBinding.inflate(LayoutInflater.from(context))
-        val dialog = AlertDialog.Builder(requireContext())
+        deviceListDialog = AlertDialog.Builder(requireContext())
             .setTitle("Devices Bluetooth")
             .setView(dialogBinding.root)
             .create()
@@ -120,7 +110,7 @@ class ChatFragment : Fragment() {
             scanDevices(dialogBinding)
         }
 
-        dialog.show()
+        deviceListDialog?.show()
     }
 
     private fun scanDevices(dialogBinding: DeviceListDialogBinding) {
@@ -162,6 +152,7 @@ class ChatFragment : Fragment() {
                     val device = deviceMap[selectedDeviceAddress]
                     device?.let {
                         connectToDevice(it)
+                        deviceListDialog?.dismiss()
                     }
                 }
 
@@ -216,9 +207,14 @@ class ChatFragment : Fragment() {
             .setMessage(message)
             .setPositiveButton("Try again") { dialogInterface, _ ->
                 dialogInterface.dismiss()
+                showDeviceListDialog()
             }
             .setNegativeButton("Back") { dialogInterface, _ ->
                 dialogInterface.dismiss()
+
+                binding.btnSend.isEnabled = false
+                binding.etMessage.isEnabled = false
+                receiveBotMessage("Bluetooth connection is unavailable. Please try connecting again.")
             }
             .create()
 
@@ -260,13 +256,33 @@ class ChatFragment : Fragment() {
             if (gattCharacteristic != null) {
                 Handler(Looper.getMainLooper()).post {
                     hideLoadingOverlay()
-                    receiveBotMessage("Connected to ESP32. Ready to communication.")
+                    receiveBotMessage("Connected to ESP32. Ready for communication.")
 
                     binding.btnSend.isEnabled = true
                     binding.etMessage.isEnabled = true
                 }
 
                 startListeningForMessages()
+
+                val phoneNumber = arguments?.getString("phoneNumber")
+                val firstMessage = arguments?.getString("firstMessage")
+
+                if (phoneNumber != null) {
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        sendPhoneNumberToESP32(phoneNumber)
+
+                        if (firstMessage != null) {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                sendMessage(firstMessage)
+                            }, 1000)
+                        }
+                    }, 2000)
+                } else if (firstMessage != null) {
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        sendMessage(firstMessage)
+                    }, 2000)
+                }
+
             } else {
                 Handler(Looper.getMainLooper()).post {
                     showConnectionErrorDialog("Service or feature not found in ESP32.")
@@ -308,7 +324,8 @@ class ChatFragment : Fragment() {
         gattCharacteristic?.let {
             if (checkBluetoothPermissions()) {
                 try {
-                    it.setValue(phoneNumber.toByteArray())
+                    val messageWithNullTerminator = (phoneNumber + "\u0000").toByteArray()
+                    it.setValue(messageWithNullTerminator)
                     bluetoothGatt?.writeCharacteristic(it)
                     receiveBotMessage("Phone number sent to ESP32.")
                 } catch (e: SecurityException) {
@@ -339,7 +356,8 @@ class ChatFragment : Fragment() {
         gattCharacteristic?.let {
             if (checkBluetoothPermissions()) {
                 try {
-                    it.setValue(message.toByteArray())
+                    val messageWithNullTerminator = (message + "\u0000").toByteArray()
+                    it.setValue(messageWithNullTerminator)
                     bluetoothGatt?.writeCharacteristic(it)
                     receiveBotMessage("Message sent to ESP32.")
                     isFirstMessageSent = true
