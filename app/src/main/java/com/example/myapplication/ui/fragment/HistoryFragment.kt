@@ -2,18 +2,29 @@ package com.example.myapplication.ui.fragment
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.amazonaws.ClientConfiguration
+import com.amazonaws.auth.CognitoCachingCredentialsProvider
+import com.amazonaws.regions.Regions
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
+import com.amazonaws.services.dynamodbv2.model.AttributeValue
+import com.amazonaws.services.dynamodbv2.model.ScanRequest
 import com.example.myapplication.R
 import com.example.myapplication.databinding.FragmentHistoryBinding
 import com.example.myapplication.ui.adapter.HistoryAdapter
 import com.example.myapplication.ui.item.HistoryItem
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class HistoryFragment : Fragment() {
 
@@ -21,6 +32,7 @@ class HistoryFragment : Fragment() {
     private lateinit var historyAdapter: HistoryAdapter
     private var _binding: FragmentHistoryBinding? = null
     private val binding get() = _binding!!
+    private lateinit var client: AmazonDynamoDBClient
 
     @SuppressLint("SetTextI18n")
     override fun onCreateView(
@@ -37,25 +49,33 @@ class HistoryFragment : Fragment() {
         recyclerView = view.findViewById(R.id.recyclerViewHistory)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        // Simulated data for the RecyclerView
-        val historyList = listOf(
-            HistoryItem("October", 11, 2024, "3:30", "PM", "15 km/h", "70%", "22°C"),
-            HistoryItem("October", 12, 2024, "4:00", "PM", "10 km/h", "60%", "20°C"),
-            HistoryItem("October", 13, 2024, "4:30", "PM", "15 km/h", "80%", "21°C"),
-            HistoryItem("October", 14, 2024, "5:00", "PM", "10 km/h", "90%", "25°C"),
-            HistoryItem("October", 15, 2024, "5:30", "PM", "9 km/h", "20%", "30°C"),
-            HistoryItem("October", 16, 2024, "6:00", "PM", "13 km/h", "40%", "15°C"),
-            HistoryItem("October", 17, 2024, "6:30", "PM", "11 km/h", "50%", "20°C")
+        // Inicializar o provedor de credenciais do Amazon Cognito
+        val credentialsProvider = CognitoCachingCredentialsProvider(
+            requireContext(),
+            "eu-north-1:7c834096-3ddd-4282-a809-4390e3e5686a", // ID do grupo de identidades
+            Regions.EU_NORTH_1 // Região
         )
 
-        historyAdapter = HistoryAdapter(historyList)
-        recyclerView.adapter = historyAdapter
+        // Inicializar o cliente para acesso ao DynamoDB
+        client = AmazonDynamoDBClient(credentialsProvider, ClientConfiguration())
 
-        return view
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+        // Busca os dados do DynamoDB em uma thread separada
+        val thread = Thread {
+            val fetchedHistory = fetchHistoryFromDynamoDB(locationName)
+            requireActivity().runOnUiThread {
+                if (fetchedHistory.isNotEmpty()) {
+                    historyAdapter = HistoryAdapter(fetchedHistory)
+                    recyclerView.adapter = historyAdapter
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        "No data found for $locationName",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+        thread.start()
 
         val viewAnotherDateButton = view.findViewById<Button>(R.id.viewAnotherDate)
         viewAnotherDateButton.setOnClickListener {
@@ -68,10 +88,84 @@ class HistoryFragment : Fragment() {
 
             findNavController().navigate(R.id.navigation_select_history, bundle)
         }
+
+        return view
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun fetchHistoryFromDynamoDB(locationName: String): List<HistoryItem> {
+        val historyList = mutableListOf<HistoryItem>()
+
+        try {
+            val attributeValue = AttributeValue().withS(locationName)
+            // Configurar os parâmetros da consulta, agora filtrando pelo nome da montanha
+            val request = ScanRequest()
+                .withTableName("safe_climb") // Substitua pelo nome da sua tabela no DynamoDB
+                .withFilterExpression("mountain = :mountainName")
+                .addExpressionAttributeValuesEntry(":mountainName", attributeValue)
+
+            // Adicionar log para verificar o estado da solicitação
+            Log.d("DynamoDB", "Executing scan with request: $request")
+
+            // Executar o scan no DynamoDB
+            val result = client.scan(request)
+
+            Log.d("DynamoDB", "Scan result: $result")
+
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd#HH:mm:ss", Locale.getDefault())
+
+            for (item in result.items) {
+                val timestamp = item["timestamp"]?.s
+
+                if (timestamp != null) {
+                    try {
+                        val date = dateFormat.parse(timestamp)
+                        if (date != null) {
+                            // Criar uma instância de Calendar a partir da data
+                            val calendar = Calendar.getInstance()
+                            calendar.time = date
+
+                            val year = calendar.get(Calendar.YEAR)
+                            val month = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()) ?: "Unknown"
+                            val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+                            val hourOfDay = calendar.get(Calendar.HOUR_OF_DAY)
+                            val minute = calendar.get(Calendar.MINUTE)
+                            val periodOfDay = if (hourOfDay < 12) "AM" else "PM"
+                            val hour = String.format("%02d:%02d", if (hourOfDay % 12 == 0) 12 else hourOfDay % 12, minute)
+
+                            // Extrair dados de outros campos da tabela DynamoDB
+                            val windSpeed = item["wind_speed"]?.n?.let { "$it km/h" } ?: "Unknown"
+                            val humidity = item["humidity"]?.n?.let { "$it%" } ?: "Unknown"
+                            val temperature = item["temperature"]?.n?.let { "$it°C" } ?: "Unknown"
+
+                            // Adicionar o item ao histórico
+                            val historyItem = HistoryItem(
+                                month = month,
+                                day = day,
+                                year = year,
+                                hour = hour,
+                                periodOfDay = periodOfDay,
+                                windSpeed = windSpeed,
+                                humidity = humidity,
+                                temperature = temperature
+                            )
+                            historyList.add(historyItem)
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.e("DynamoDB", "Error executing scan", e)
+        }
+
+        return historyList
     }
 }

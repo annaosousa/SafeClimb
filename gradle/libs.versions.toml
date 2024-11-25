@@ -34,6 +34,7 @@ osmdroid = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "o
 aws-android-sdk-core = { module = "com.amazonaws:aws-android-sdk-core", version.ref = "awsAndroidSdkCore" }
 aws-sdk-dynamodb = { group = "aws.sdk.kotlin", name = "dynamodb", version.ref = "awsKotlinSdkVersion" }
 aws-android-sdk-mobile-client = { module = "com.amazonaws:aws-android-sdk-mobile-client", version.ref = "awsAndroidSdkCore" }
+aws-android-sdk-ddb-document = { module = "com.amazonaws:aws-android-sdk-ddb-document", version.ref = "awsAndroidSdkCore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
