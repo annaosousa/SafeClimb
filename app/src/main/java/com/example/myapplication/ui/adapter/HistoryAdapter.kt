@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
 import com.example.myapplication.ui.item.HistoryItem
 
-class HistoryAdapter(private val historyList: List<HistoryItem>) :
+class HistoryAdapter(private var historyList: List<HistoryItem>) :
     RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() {
 
     class HistoryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -52,5 +52,10 @@ class HistoryAdapter(private val historyList: List<HistoryItem>) :
 
     override fun getItemCount(): Int {
         return historyList.size
+    }
+
+    fun updateData(newHistoryList: List<HistoryItem>) {
+        historyList = newHistoryList
+        notifyDataSetChanged()
     }
 }

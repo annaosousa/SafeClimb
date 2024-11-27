@@ -10,21 +10,21 @@
         android:id="@+id/title_select_history"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:textColor="#000000"
         android:textAlignment="center"
+        android:textColor="#000000"
         android:textSize="27sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteY="27dp"
-        tools:ignore="MissingConstraints" />
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteY="27dp" />
 
     <TextView
         android:id="@+id/textDescription"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="104dp"
+        android:layout_marginTop="16dp"
         android:text="Are you trying to find historical weather data? \n\nPlease enter the desired \ndate and time below"
         android:textAlignment="center"
         android:textColor="#000000"
@@ -39,12 +39,12 @@
         android:id="@+id/linearLayoutEditTimer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="8dp"
         android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintTop_toBottomOf="@+id/textDescription"
         tools:ignore="MissingConstraints"
-        tools:layout_editor_absoluteX="0dp">
+        tools:layout_editor_absoluteX="16dp">
 
         <TextView
             android:id="@+id/timer"
@@ -63,9 +63,9 @@
             android:layout_width="200dp"
             android:layout_height="50dp"
             android:layout_marginTop="10dp"
-            android:hint="Select a time"
-            android:focusable="false"
             android:clickable="true"
+            android:focusable="false"
+            android:hint="Select a time"
             android:inputType="time"
             tools:ignore="MissingConstraints"
             tools:layout_editor_absoluteX="136dp"
@@ -76,7 +76,7 @@
         android:id="@+id/linearLayoutEditDate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="8dp"
         android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintTop_toBottomOf="@+id/linearLayoutEditTimer"
@@ -101,9 +101,9 @@
             android:layout_width="200dp"
             android:layout_height="50dp"
             android:layout_marginTop="10dp"
-            android:hint="Select a date"
-            android:focusable="false"
             android:clickable="true"
+            android:focusable="false"
+            android:hint="Select a date"
             android:inputType="date"
             tools:ignore="MissingConstraints"
             tools:layout_editor_absoluteX="136dp" />
@@ -113,7 +113,7 @@
         android:id="@+id/buttonFindHistory"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="84dp"
+        android:layout_marginTop="12dp"
         android:backgroundTint="#2e7d32"
         android:text="Find history"
         android:textColor="#FFFFFF"
@@ -121,5 +121,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linearLayoutEditDate"
         tools:ignore="HardcodedText,MissingConstraints" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewHistory"
+        android:layout_width="411dp"
+        android:layout_height="308dp"
+        android:layout_marginBottom="48dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/title_history"
+        app:layout_constraintVertical_bias="0.0"
+        tools:layout_editor_absoluteX="0dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
