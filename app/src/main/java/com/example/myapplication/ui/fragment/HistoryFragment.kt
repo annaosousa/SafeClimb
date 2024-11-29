@@ -97,6 +97,7 @@ class HistoryFragment : Fragment() {
         _binding = null
     }
 
+    @SuppressLint("DefaultLocale")
     private fun fetchHistoryFromDynamoDB(locationName: String): List<HistoryItem> {
         val historyList = mutableListOf<HistoryItem>()
 
@@ -116,32 +117,41 @@ class HistoryFragment : Fragment() {
 
             Log.d("DynamoDB", "Scan result: $result")
 
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd#HH:mm:ss", Locale.getDefault())
+            // Formato esperado para o campo `timestamp`
+            val dateFormat = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault())
 
             for (item in result.items) {
-                val timestamp = item["timestamp"]?.s
+                val rawTimestamp = item["timestamp"]?.s
+                if (rawTimestamp.isNullOrEmpty()) continue
 
-                if (timestamp != null) {
-                    try {
-                        val date = dateFormat.parse(timestamp)
-                        if (date != null) {
-                            // Criar uma instância de Calendar a partir da data
-                            val calendar = Calendar.getInstance()
-                            calendar.time = date
+                try {
+                    // Parse da data no formato yyyyMMddHHmmss
+                    val date = dateFormat.parse(rawTimestamp)
+                    if (date != null) {
+                        val calendar = Calendar.getInstance()
+                        calendar.time = date
 
-                            val year = calendar.get(Calendar.YEAR)
-                            val month = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()) ?: "Unknown"
-                            val day = calendar.get(Calendar.DAY_OF_MONTH)
+                        val year = calendar.get(Calendar.YEAR)
+                        val month = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()) ?: "Unknown"
+                        val day = calendar.get(Calendar.DAY_OF_MONTH)
 
-                            val hourOfDay = calendar.get(Calendar.HOUR_OF_DAY)
-                            val minute = calendar.get(Calendar.MINUTE)
-                            val periodOfDay = if (hourOfDay < 12) "AM" else "PM"
-                            val hour = String.format("%02d:%02d", if (hourOfDay % 12 == 0) 12 else hourOfDay % 12, minute)
+                        val hourOfDay = calendar.get(Calendar.HOUR_OF_DAY)
+                        val minute = calendar.get(Calendar.MINUTE)
+                        val periodOfDay = if (hourOfDay < 12) "AM" else "PM"
+                        val hour = String.format(
+                            "%02d:%02d",
+                            if (hourOfDay % 12 == 0) 12 else hourOfDay % 12,
+                            minute
+                        )
 
-                            // Extrair dados de outros campos da tabela DynamoDB
-                            val windSpeed = item["wind_speed"]?.n?.let { "$it km/h" } ?: "Unknown"
-                            val humidity = item["humidity"]?.n?.let { "$it%" } ?: "Unknown"
-                            val temperature = item["temperature"]?.n?.let { "$it°C" } ?: "Unknown"
+                        // Extrair dados do campo `payload`
+                        val payload = item["payload"]?.m
+                        if (payload != null) {
+                            val windSpeed = payload["wind_speed"]?.n?.toDoubleOrNull()?.let { "$it km/h" } ?: "Unknown"
+                            val humidity = payload["humidity"]?.n?.toDoubleOrNull()?.let { "$it%" } ?: "Unknown"
+                            val temperature = payload["temperature"]?.n?.toDoubleOrNull()?.let { "$it°C" } ?: "Unknown"
+                            val precipitation = payload["precipitation"]?.n?.toDoubleOrNull()?.let { "$it mm" } ?: "Unknown"
+                            val soil = payload["soil_moisture"]?.n?.toDoubleOrNull()?.let { "$it%" } ?: "Unknown"
 
                             // Adicionar o item ao histórico
                             val historyItem = HistoryItem(
@@ -152,13 +162,15 @@ class HistoryFragment : Fragment() {
                                 periodOfDay = periodOfDay,
                                 windSpeed = windSpeed,
                                 humidity = humidity,
-                                temperature = temperature
+                                temperature = temperature,
+                                precipitation = precipitation,
+                                soil = soil
                             )
                             historyList.add(historyItem)
                         }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
                     }
+                } catch (e: Exception) {
+                    Log.e("DynamoDB", "Error parsing date: $rawTimestamp", e)
                 }
             }
         } catch (e: Exception) {
@@ -168,4 +180,5 @@ class HistoryFragment : Fragment() {
 
         return historyList
     }
+
 }

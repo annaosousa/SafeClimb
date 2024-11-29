@@ -226,6 +226,8 @@ class SelectHistoryFragment : Fragment() {
                             val windSpeed = item["wind_speed"]?.n?.let { "$it km/h" } ?: "Unknown"
                             val humidity = item["humidity"]?.n?.let { "$it%" } ?: "Unknown"
                             val temperature = item["temperature"]?.n?.let { "$it°C" } ?: "Unknown"
+                            val precipitation = item["precipitation"]?.n?.toDoubleOrNull()?.let { "$it mm" } ?: "Unknown"
+                            val soil = item["soil_moisture"]?.n?.toDoubleOrNull()?.let { "$it%" } ?: "Unknown"
 
                             // Adicionar o item ao histórico
                             val historyItem = HistoryItem(
@@ -236,7 +238,9 @@ class SelectHistoryFragment : Fragment() {
                                 periodOfDay = periodOfDay,
                                 windSpeed = windSpeed,
                                 humidity = humidity,
-                                temperature = temperature
+                                temperature = temperature,
+                                precipitation = precipitation,
+                                soil = soil
                             )
                             historyList.add(historyItem)
                         }

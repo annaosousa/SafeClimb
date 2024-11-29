@@ -8,5 +8,7 @@ data class HistoryItem(
     val periodOfDay: String,
     val windSpeed: String,
     val humidity: String,
-    val temperature: String
+    val temperature: String,
+    val precipitation: String,
+    val soil: String
 )

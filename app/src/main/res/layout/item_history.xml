@@ -121,6 +121,42 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/imagePrecipitation"
+            android:layout_width="55dp"
+            android:layout_height="52dp"
+            app:srcCompat="@drawable/precipitation" />
+
+        <TextView
+            android:id="@+id/textPrecipitation"
+            android:layout_width="55dp"
+            android:layout_height="wrap_content"
+            android:text="15 km/h"
+            android:textColor="#000000"
+            android:textSize="19sp" />
+
+        <ImageView
+            android:id="@+id/imageSoil"
+            android:layout_width="55dp"
+            android:layout_height="52dp"
+            app:srcCompat="@drawable/soil" />
+
+        <TextView
+            android:id="@+id/textSoil"
+            android:layout_width="55dp"
+            android:layout_height="wrap_content"
+            android:text="70%"
+            android:textColor="#000000"
+            android:textSize="19sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="horizontal"
         android:layout_marginTop="16dp">

@@ -35,7 +35,7 @@ class ResultFragment : Fragment() {
     ): View {
         _binding = FragmentResultBinding.inflate(inflater, container, false)
 
-        val mountainName = arguments?.getString("mountain_name")
+        val mountainName = arguments?.getString("mountain_name")?: "Default Location"
         val mountainDescription = arguments?.getString("mountain_description")
         val imageResourceId = arguments?.getInt("image_resource_id")
 
@@ -52,10 +52,10 @@ class ResultFragment : Fragment() {
 
         // Inicializando o cliente DynamoDB com as credenciais
         client = AmazonDynamoDBClient(credentialsProvider)
-        client.setRegion(Region.getRegion(Regions.EU_NORTH_1))
+        client.setRegion(Region.getRegion(Regions.US_EAST_1))
 
         // Buscar dados do DynamoDB
-        fetchDataFromDynamoDB(mountainName.toString())
+        fetchDataFromDynamoDB(mountainName)
 
         binding.viewMap.setOnClickListener {
             val bundle = Bundle().apply {
@@ -77,41 +77,37 @@ class ResultFragment : Fragment() {
         return binding.root
     }
 
+    @SuppressLint("SetTextI18n")
     private fun fetchDataFromDynamoDB(locationName: String) {
-        // Criando um valor para o filtro de consulta
         val attributeValue = AttributeValue().withS(locationName)
 
-        // Configurar os parâmetros da consulta, agora filtrando pelo nome da montanha
         val request = ScanRequest()
-            .withTableName("safe_climb") // Substitua pelo nome da sua tabela no DynamoDB
+            .withTableName("safe_climb")
             .withFilterExpression("mountain = :mountainName")
             .addExpressionAttributeValuesEntry(":mountainName", attributeValue)
 
-        // Realizando o scan para pegar todos os itens
         Thread {
             try {
                 val scanResult: ScanResult = client.scan(request)
                 val items = scanResult.items
                 if (items.isNotEmpty()) {
-                    // Encontrar o item com o timestamp mais recente
                     val latestItem = items.maxByOrNull { item ->
-                        val timestamp = item["timestamp"]?.s // "timestamp" é o nome da chave no DynamoDB
-                        parseTimestamp(timestamp)
+                        val timestamp = item["timestamp"]?.s
+                        parseTimestamp(timestamp)?.time ?: 0L
                     }
 
                     latestItem?.let {
-                        val windSpeed = it["wind_speed"]?.n?.toIntOrNull() ?: 0
-                        val humidity = it["humidity"]?.n?.toIntOrNull() ?: 0
-                        val temperature = it["temperature"]?.n?.toIntOrNull() ?: 0
-                        val precipitation = it["precipitation"]?.n?.toIntOrNull() ?: 0
+                        val payload = it["payload"]?.m
+                        val windSpeed = payload?.get("wind_speed")?.n?.toDoubleOrNull() ?: 0.0
+                        val humidity = payload?.get("humidity")?.n?.toIntOrNull() ?: 0
+                        val temperature = payload?.get("temperature")?.n?.toDoubleOrNull() ?: 0.0
+                        val precipitation = payload?.get("precipitation")?.n?.toIntOrNull() ?: 0
+                        val soil = payload?.get("soil_moisture")?.n?.toDoubleOrNull() ?: 0.0
 
-                        // Verificando as condições climáticas
-                        val isConditionsGood = (temperature in 10..20) &&
+                        val isConditionsGood = (temperature in 10.0..20.0) &&
                                 (humidity in 30..60) &&
-                                (windSpeed in 0..20) &&
-                                (precipitation == 0)  // Aceitando precipitação mínima
+                                (windSpeed in 0.0..20.0)
 
-                        // Exibir a mensagem e ajustar a cor conforme as condições
                         activity?.runOnUiThread {
                             if (isConditionsGood) {
                                 binding.resultWeather.text = "These are great conditions. Let's climb?"
@@ -122,9 +118,11 @@ class ResultFragment : Fragment() {
                             }
 
                             // Exibindo as condições climáticas
-                            binding.textWindy.text = "Windy: $windSpeed km/h"
+                            binding.textWindy.text = "Windy: %.1f km/h".format(windSpeed)
                             binding.textHumidity.text = "Humidity: $humidity%"
-                            binding.textTemperature.text = "Temperature: $temperature°C"
+                            binding.textTemperature.text = "Temperature: %.1f°C".format(temperature)
+                            binding.textPrecipitation.text = "Precipitation: $precipitation mm"
+                            binding.textSoil.text = "Soil moisture: $soil%"
                         }
                     }
                 } else {
@@ -133,14 +131,17 @@ class ResultFragment : Fragment() {
             } catch (e: Exception) {
                 showToast("Erro ao buscar dados: ${e.message}")
             }
-        }.start() // Inicia a execução da consulta em uma thread separada
+        }.start()
     }
 
-    private fun parseTimestamp(timestamp: String?): Date {
-        if (timestamp == null) return Date(0)
-        // Formato de timestamp que você está usando
-        val format = SimpleDateFormat("yyyy-MM-dd#HH:mm:ss", Locale.getDefault())
-        return format.parse(timestamp) ?: Date(0)
+    private fun parseTimestamp(timestamp: String?): Date? {
+        if (timestamp == null) return null
+        return try {
+            val format = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault())
+            format.parse(timestamp)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     private fun showToast(message: String) {
