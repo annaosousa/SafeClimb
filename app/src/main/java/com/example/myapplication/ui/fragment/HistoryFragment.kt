@@ -24,7 +24,9 @@ import com.example.myapplication.ui.adapter.HistoryAdapter
 import com.example.myapplication.ui.item.HistoryItem
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 class HistoryFragment : Fragment() {
 
@@ -125,8 +127,14 @@ class HistoryFragment : Fragment() {
                 if (rawTimestamp.isNullOrEmpty()) continue
 
                 try {
+                    val longTimestamp = rawTimestamp.trim().toLong()
+                    val dateUnix = Date(longTimestamp)
+
+                    // Retornar a data formatada
+                    val formattedTimestamp = dateFormat.format(dateUnix)
+
                     // Parse da data no formato yyyyMMddHHmmss
-                    val date = dateFormat.parse(rawTimestamp)
+                    val date = dateFormat.parse(formattedTimestamp)
                     if (date != null) {
                         val calendar = Calendar.getInstance()
                         calendar.time = date

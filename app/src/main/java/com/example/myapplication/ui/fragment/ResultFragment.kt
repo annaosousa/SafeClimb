@@ -93,7 +93,7 @@ class ResultFragment : Fragment() {
                 if (items.isNotEmpty()) {
                     val latestItem = items.maxByOrNull { item ->
                         val timestamp = item["timestamp"]?.s
-                        parseTimestamp(timestamp)?.time ?: 0L
+                        parseTimestamp(timestamp)?.toLongOrNull() ?: 0L
                     }
 
                     latestItem?.let {
@@ -134,15 +134,19 @@ class ResultFragment : Fragment() {
         }.start()
     }
 
-    private fun parseTimestamp(timestamp: String?): Date? {
-        if (timestamp == null) return null
+    private fun parseTimestamp(unixTimestamp: String?): String? {
+        if (unixTimestamp == null) return null
         return try {
+            val timestampInMillis = unixTimestamp.toLong() * 1000
+            val date = Date(timestampInMillis)
+
             val format = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault())
-            format.parse(timestamp)
+            format.format(date)
         } catch (e: Exception) {
             null
         }
     }
+
 
     private fun showToast(message: String) {
         activity?.runOnUiThread {

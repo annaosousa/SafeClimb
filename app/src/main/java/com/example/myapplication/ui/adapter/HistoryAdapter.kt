@@ -27,6 +27,8 @@ class HistoryAdapter(private var historyList: List<HistoryItem>) :
         val textHumidity: TextView = itemView.findViewById(R.id.textHumidity)
         val imageTemperature: ImageView = itemView.findViewById(R.id.imageTemperature)
         val textTemperature: TextView = itemView.findViewById(R.id.textTemperature)
+        val precipitation: TextView = itemView.findViewById(R.id.textPrecipitation)
+        val soil: TextView = itemView.findViewById(R.id.textSoil)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HistoryViewHolder {
@@ -48,6 +50,8 @@ class HistoryAdapter(private var historyList: List<HistoryItem>) :
         holder.textWindy.text = historyItem.windSpeed
         holder.textHumidity.text = historyItem.humidity
         holder.textTemperature.text = historyItem.temperature
+        holder.precipitation.text = historyItem.precipitation
+        holder.soil.text = historyItem.soil
     }
 
     override fun getItemCount(): Int {
