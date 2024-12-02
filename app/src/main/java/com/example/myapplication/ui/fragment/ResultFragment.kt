@@ -27,6 +27,8 @@ class ResultFragment : Fragment() {
 
     private lateinit var client: AmazonDynamoDBClient
 
+    private var gotResult: Boolean = false
+
     @SuppressLint("SetTextI18n")
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -58,17 +60,21 @@ class ResultFragment : Fragment() {
         fetchDataFromDynamoDB(mountainName)
 
         binding.viewMap.setOnClickListener {
-            val bundle = Bundle().apply {
-                putString("selected_mountain", mountainName)
+            if (this.gotResult) {
+                val bundle = Bundle().apply {
+                    putString("selected_mountain", mountainName)
+                }
+                findNavController().navigate(R.id.navigation_map_mountain, bundle)
             }
-            findNavController().navigate(R.id.navigation_map_mountain, bundle)
         }
 
         binding.viewHistory.setOnClickListener {
-            val bundle = Bundle().apply {
-                putString("mountain_name", mountainName)
+            if (this.gotResult) {
+                val bundle = Bundle().apply {
+                    putString("mountain_name", mountainName)
+                }
+                findNavController().navigate(R.id.navigation_history, bundle)
             }
-            findNavController().navigate(R.id.navigation_history, bundle)
         }
 
         val query = arguments?.getString("search_query") // Obtendo a string passada
@@ -123,6 +129,8 @@ class ResultFragment : Fragment() {
                             binding.textTemperature.text = "Temperature: %.1f°C".format(temperature)
                             binding.textPrecipitation.text = "Precipitation: $precipitation mm"
                             binding.textSoil.text = "Soil moisture: $soil%"
+
+                            this.gotResult = true
                         }
                     }
                 } else {
