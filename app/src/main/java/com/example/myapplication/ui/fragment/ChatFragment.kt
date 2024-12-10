@@ -40,6 +40,7 @@ class ChatFragment : Fragment() {
     private val binding get() = _binding!!
     private var isFirstMessageSent = false
     private var deviceListDialog: AlertDialog? = null
+    private var isPhoneNumberSent = false
 
     private val messages = mutableListOf<Message>()
     private lateinit var adapter: MessageAdapter
@@ -267,9 +268,10 @@ class ChatFragment : Fragment() {
                 val phoneNumber = arguments?.getString("phoneNumber")
                 val firstMessage = arguments?.getString("firstMessage")
 
-                if (phoneNumber != null) {
+                if (!isPhoneNumberSent && phoneNumber != null) {
                     Handler(Looper.getMainLooper()).postDelayed({
                         sendPhoneNumberToESP32(phoneNumber)
+                        isPhoneNumberSent = true;
 
                         if (firstMessage != null) {
                             Handler(Looper.getMainLooper()).postDelayed({
@@ -321,21 +323,27 @@ class ChatFragment : Fragment() {
     }
 
     private fun sendPhoneNumberToESP32(phoneNumber: String) {
+        val formattedPhoneNumber = if (phoneNumber.startsWith("55")) {
+            phoneNumber
+        } else {
+            "55$phoneNumber"
+        }
+
         gattCharacteristic?.let {
             if (checkBluetoothPermissions()) {
                 try {
-                    val messageWithNullTerminator = (phoneNumber + "\u0000").toByteArray()
+                    val messageWithNullTerminator = (formattedPhoneNumber + "\u0000").toByteArray()
                     it.setValue(messageWithNullTerminator)
                     bluetoothGatt?.writeCharacteristic(it)
-                    receiveBotMessage("Phone number sent to ESP32.")
+                    receiveBotMessage("Phone number sent to ESP32: $formattedPhoneNumber")
                 } catch (e: SecurityException) {
                     Log.e("ChatFragment", "Permission denied: Unable to send phone number", e)
-                    receiveBotMessage("Unable to send phone number: Bluetooth permissions are required.")
+                    receiveBotMessage("Unable to send phone number. Bluetooth permissions are required.")
                 }
             } else {
                 requestBluetoothPermissions()
             }
-        } ?: receiveBotMessage("Bluetooth connection not established.")
+        } ?: receiveBotMessage("Characteristic not found. Unable to send phone number.")
     }
 
     private fun sendMessage(userMessage: String) {
