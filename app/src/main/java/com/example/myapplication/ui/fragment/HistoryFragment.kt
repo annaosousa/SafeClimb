@@ -159,7 +159,7 @@ class HistoryFragment : Fragment() {
                         if (payload != null) {
                             val windSpeed = payload["wind_speed"]?.n?.toDoubleOrNull()?.let { "$it km/h" } ?: "Unknown"
                             val humidity = payload["humidity"]?.n?.toDoubleOrNull()?.let { "$it%" } ?: "Unknown"
-                            val temperature = payload["temperature"]?.n?.toDoubleOrNull()?.let { "$it°C" } ?: "Unknown"
+                            val temperature = payload["temperature"]?.n?.toDoubleOrNull()?.let { "${it/10}°C" } ?: "Unknown"
                             val precipitation = payload["precipitation"]?.n?.toDoubleOrNull()?.let { "$it mm" } ?: "Unknown"
                             val soil = payload["soil_moisture"]?.n?.toDoubleOrNull()?.let { "$it%" } ?: "Unknown"
 

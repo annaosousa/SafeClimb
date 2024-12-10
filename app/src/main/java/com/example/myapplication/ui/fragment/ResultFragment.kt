@@ -107,6 +107,8 @@ class ResultFragment : Fragment() {
                         val windSpeed = payload?.get("wind_speed")?.n?.toDoubleOrNull() ?: 0.0
                         val humidity = payload?.get("humidity")?.n?.toIntOrNull() ?: 0
                         val temperature = payload?.get("temperature")?.n?.toDoubleOrNull() ?: 0.0
+                        val adjustedTemperature = temperature / 10.0
+
                         val precipitation = payload?.get("precipitation")?.n?.toIntOrNull() ?: 0
                         val soil = payload?.get("soil_moisture")?.n?.toDoubleOrNull() ?: 0.0
 
@@ -126,7 +128,7 @@ class ResultFragment : Fragment() {
                             // Exibindo as condições climáticas
                             binding.textWindy.text = "Windy: %.1f km/h".format(windSpeed)
                             binding.textHumidity.text = "Humidity: $humidity%"
-                            binding.textTemperature.text = "Temperature: %.1f°C".format(temperature)
+                            binding.textTemperature.text = "Temperature: %.1f°C".format(adjustedTemperature)
                             binding.textPrecipitation.text = "Precipitation: $precipitation mm"
                             binding.textSoil.text = "Soil moisture: $soil%"
 
