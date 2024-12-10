@@ -26,7 +26,6 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import java.util.TimeZone
 
 class HistoryFragment : Fragment() {
 
@@ -49,7 +48,10 @@ class HistoryFragment : Fragment() {
 
         // Initialize RecyclerView
         recyclerView = view.findViewById(R.id.recyclerViewHistory)
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.layoutManager = LinearLayoutManager(requireContext()).apply {
+            reverseLayout = true
+            stackFromEnd = true
+        }
 
         // Inicializar o provedor de credenciais do Amazon Cognito
         val credentialsProvider = CognitoCachingCredentialsProvider(
