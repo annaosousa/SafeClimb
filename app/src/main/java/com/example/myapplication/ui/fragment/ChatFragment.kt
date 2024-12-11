@@ -41,6 +41,7 @@ class ChatFragment : Fragment() {
     private var isFirstMessageSent = false
     private var deviceListDialog: AlertDialog? = null
     private var isPhoneNumberSent = false
+    private var messageBuffer = StringBuilder()
 
     private val messages = mutableListOf<Message>()
     private lateinit var adapter: MessageAdapter
@@ -295,9 +296,17 @@ class ChatFragment : Fragment() {
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic
         ) {
-            val messageReceived = characteristic.getStringValue(0)
+            val fragment = characteristic.getStringValue(0)
             Handler(Looper.getMainLooper()).post {
-                receiveBotMessage(messageReceived)
+                if (fragment.isNotEmpty()) {
+                    messageBuffer.append(fragment)
+
+                    if (fragment.contains('\u0000')) {
+                        val completeMessage = messageBuffer.toString().replace("\u0000", "").trim()
+                        receiveBotMessage(completeMessage)
+                        messageBuffer.clear()
+                    }
+                }
             }
         }
     }
