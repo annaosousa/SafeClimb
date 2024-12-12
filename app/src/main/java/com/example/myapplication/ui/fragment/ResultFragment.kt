@@ -112,7 +112,7 @@ class ResultFragment : Fragment() {
                         val precipitation = payload?.get("precipitation")?.n?.toIntOrNull() ?: 0
                         val soil = payload?.get("soil_moisture")?.n?.toDoubleOrNull() ?: 0.0
 
-                        val isConditionsGood = (temperature in 10.0..20.0) &&
+                        val isConditionsGood = (adjustedTemperature in 10.0..20.0) &&
                                 (humidity in 30..60) &&
                                 (windSpeed in 0.0..20.0)
 
