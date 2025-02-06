@@ -129,7 +129,7 @@ class ResultFragment : Fragment() {
                             binding.textWindy.text = "Windy: %.1f km/h".format(windSpeed)
                             binding.textHumidity.text = "Humidity: $humidity%"
                             binding.textTemperature.text = "Temperature: %.1f°C".format(adjustedTemperature)
-                            binding.textPrecipitation.text = "Precipitation: $precipitation mm"
+                            binding.textPrecipitation.text = "Precipitation: $precipitation %"
                             binding.textSoil.text = "Soil moisture: $soil%"
 
                             this.gotResult = true

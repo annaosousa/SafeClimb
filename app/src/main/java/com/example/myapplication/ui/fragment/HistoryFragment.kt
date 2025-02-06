@@ -142,7 +142,7 @@ class HistoryFragment : Fragment() {
                         calendar.time = date
 
                         val year = calendar.get(Calendar.YEAR)
-                        val month = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()) ?: "Unknown"
+                        val month = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.ENGLISH) ?: "Unknown"
                         val day = calendar.get(Calendar.DAY_OF_MONTH)
 
                         val hourOfDay = calendar.get(Calendar.HOUR_OF_DAY)
@@ -160,7 +160,7 @@ class HistoryFragment : Fragment() {
                             val windSpeed = payload["wind_speed"]?.n?.toDoubleOrNull()?.let { "$it km/h" } ?: "Unknown"
                             val humidity = payload["humidity"]?.n?.toDoubleOrNull()?.let { "$it%" } ?: "Unknown"
                             val temperature = payload["temperature"]?.n?.toDoubleOrNull()?.let { "${it/10}°C" } ?: "Unknown"
-                            val precipitation = payload["precipitation"]?.n?.toDoubleOrNull()?.let { "$it mm" } ?: "Unknown"
+                            val precipitation = payload["precipitation"]?.n?.toDoubleOrNull()?.let { "$it %" } ?: "Unknown"
                             val soil = payload["soil_moisture"]?.n?.toDoubleOrNull()?.let { "$it%" } ?: "Unknown"
 
                             // Adicionar o item ao histórico
