@@ -7,6 +7,11 @@
         android:title="@string/title_home" />
 
     <item
+        android:id="@+id/navigation_start_climb"
+        android:icon="@drawable/hiking"
+        android:title="@string/title_hike" />
+
+    <item
         android:id="@+id/navigation_map"
         android:icon="@drawable/ic_baseline_map_24"
         android:title="@string/title_dashboard" />
@@ -15,5 +20,6 @@
         android:id="@+id/navigation_faq"
         android:icon="@drawable/ic_baseline_info_24"
         android:title="@string/title_faq" />
+
 
 </menu>

@@ -20,14 +20,15 @@
         android:id="@+id/popular_mountains_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:paddingTop="16dp"
         android:text="Popular mountains"
         android:textColor="#228B22"
         android:textSize="18sp"
         android:textStyle="bold"
-        tools:ignore="MissingConstraints"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/searchView"
-        app:layout_constraintStart_toStartOf="parent" />
+        tools:ignore="MissingConstraints" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/popular_mountains_recycler"
@@ -43,14 +44,15 @@
         android:id="@+id/best_view_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:paddingTop="16dp"
         android:text="Best view"
         android:textColor="#228B22"
         android:textSize="18sp"
         android:textStyle="bold"
-        tools:ignore="MissingConstraints"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/popular_mountains_recycler"
-        app:layout_constraintStart_toStartOf="parent" />
+        tools:ignore="MissingConstraints" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/best_view_recycler"

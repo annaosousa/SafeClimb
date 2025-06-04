@@ -76,7 +76,7 @@ class SearchFragment : Fragment() {
 
                     // Busca a montanha pelo nome no mapa de montanhas
                     val mountain = SearchItemAdapter.mountainMap.entries.firstOrNull {
-                        it.key.toLowerCase() == normalizedQuery
+                        it.key.toLowerCase().contains(normalizedQuery)
                     }?.value
 
                     if (mountain != null) {
@@ -98,7 +98,7 @@ class SearchFragment : Fragment() {
                         navController.navigate(R.id.navigation_result, bundle)
                     } else {
                         // Exibe uma mensagem caso a montanha não seja encontrada
-                        Toast.makeText(context, "Montanha não encontrada", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Mountain not found", Toast.LENGTH_SHORT).show()
                     }
 
                     binding.searchView.setQuery("", false)

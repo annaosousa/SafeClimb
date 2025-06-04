@@ -14,6 +14,8 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
+import com.example.myapplication.FirstActivity
 import com.example.myapplication.R
 import com.example.myapplication.databinding.FragmentMapBinding
 import kotlinx.coroutines.CoroutineScope
@@ -101,27 +103,65 @@ class MapFragment : Fragment() {
         _binding = FragmentMapBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        // Configurar o mapa
-        Configuration.getInstance().osmdroidBasePath = File(requireContext().cacheDir, "osmdroid")
-        Configuration.getInstance().osmdroidTileCache = File(requireContext().cacheDir, "osmdroid/tiles")
-        Configuration.getInstance().load(requireContext(), requireContext().getSharedPreferences("prefs", Context.MODE_PRIVATE))
-        mapView = binding.mapView
-        mapView.setTileSource(TileSourceFactory.MAPNIK)
-        mapView.setMultiTouchControls(true)
+        if (!FirstActivity.isLoggedIn()) {
+            mapView = binding.mapView
+            locationManager =
+                requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val dialog = CheckAuthenticationDialogFragment()
+            dialog.show(
+                childFragmentManager,
+                CheckAuthenticationDialogFragment.TAG
+            )
+            dialog.setNavController(findNavController())
+        }
+        else {
 
-        locationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            // Obter a última localização conhecida
-            val lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-            lastKnownLocation?.let {
-                val currentLocation = GeoPoint(it.latitude, it.longitude)
-                mapView.controller.setCenter(currentLocation)
-                mapView.controller.setZoom(15.0)
+            // Configurar o mapa
+            Configuration.getInstance().osmdroidBasePath =
+                File(requireContext().cacheDir, "osmdroid")
+            Configuration.getInstance().osmdroidTileCache =
+                File(requireContext().cacheDir, "osmdroid/tiles")
+            Configuration.getInstance().load(
+                requireContext(),
+                requireContext().getSharedPreferences("prefs", Context.MODE_PRIVATE)
+            )
+            mapView = binding.mapView
+            mapView.setTileSource(TileSourceFactory.MAPNIK)
+            mapView.setMultiTouchControls(true)
+
+            locationManager =
+                requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                // Obter a última localização conhecida
+                val lastKnownLocation =
+                    locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                lastKnownLocation?.let {
+                    val currentLocation = GeoPoint(it.latitude, it.longitude)
+                    mapView.controller.setCenter(currentLocation)
+                    mapView.controller.setZoom(15.0)
+                }
+                locationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER,
+                    5000L,
+                    10f,
+                    locationListener
+                )
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    "Permissão de localização necessária!",
+                    Toast.LENGTH_SHORT
+                ).show()
+                ActivityCompat.requestPermissions(
+                    requireActivity(),
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                    1
+                )
             }
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000L, 10f, locationListener)
-        } else {
-            Toast.makeText(requireContext(), "Permissão de localização necessária!", Toast.LENGTH_SHORT).show()
-            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
         }
 
         return root

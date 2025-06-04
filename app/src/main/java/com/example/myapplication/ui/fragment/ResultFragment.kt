@@ -13,6 +13,8 @@ import com.amazonaws.regions.Region
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
+import com.amazonaws.services.dynamodbv2.model.QueryRequest
+import com.amazonaws.services.dynamodbv2.model.QueryResult
 import com.amazonaws.services.dynamodbv2.model.ScanRequest
 import com.amazonaws.services.dynamodbv2.model.ScanResult
 import com.example.myapplication.R
@@ -38,11 +40,10 @@ class ResultFragment : Fragment() {
         _binding = FragmentResultBinding.inflate(inflater, container, false)
 
         val mountainName = arguments?.getString("mountain_name")?: "Default Location"
-        val mountainDescription = arguments?.getString("mountain_description")
+        //val mountainDescription = arguments?.getString("mountain_description")
         val imageResourceId = arguments?.getInt("image_resource_id")
 
         binding.titleResult.text = "Current weather in \n$mountainName"
-        binding.resultTextView.text = mountainDescription
         imageResourceId?.let { binding.imagePlaceholder.setImageResource(it) }
 
         // Inicializar o provedor de credenciais do Amazon Cognito
@@ -77,8 +78,7 @@ class ResultFragment : Fragment() {
             }
         }
 
-        val query = arguments?.getString("search_query") // Obtendo a string passada
-        binding.resultTextView.text = query
+//        val query = arguments?.getString("search_query") // Obtendo a string passada
 
         return binding.root
     }
@@ -87,14 +87,16 @@ class ResultFragment : Fragment() {
     private fun fetchDataFromDynamoDB(locationName: String) {
         val attributeValue = AttributeValue().withS(locationName)
 
-        val request = ScanRequest()
+        val request = QueryRequest()
             .withTableName("safe_climb")
-            .withFilterExpression("mountain = :mountainName")
-            .addExpressionAttributeValuesEntry(":mountainName", attributeValue)
+            .withKeyConditionExpression("mountain = :mountainName")
+            .withExpressionAttributeValues(mapOf(":mountainName" to attributeValue))
+            .withScanIndexForward(false)
+            .withLimit(1)
 
         Thread {
             try {
-                val scanResult: ScanResult = client.scan(request)
+                val scanResult: QueryResult = client.query(request)
                 val items = scanResult.items
                 if (items.isNotEmpty()) {
                     val latestItem = items.maxByOrNull { item ->
@@ -118,7 +120,7 @@ class ResultFragment : Fragment() {
 
                         activity?.runOnUiThread {
                             if (isConditionsGood) {
-                                binding.resultWeather.text = "These are great conditions. Let's climb?"
+                                binding.`resultWeather`.text = "These are great conditions. Let's climb?"
                                 binding.resultWeather.setTextColor(resources.getColor(R.color.green, null))
                             } else {
                                 binding.resultWeather.text = "These are bad conditions. How about another day?"

@@ -17,7 +17,9 @@ import com.amazonaws.auth.CognitoCachingCredentialsProvider
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
+import com.amazonaws.services.dynamodbv2.model.QueryRequest
 import com.amazonaws.services.dynamodbv2.model.ScanRequest
+import com.example.myapplication.FirstActivity
 import com.example.myapplication.R
 import com.example.myapplication.databinding.FragmentHistoryBinding
 import com.example.myapplication.ui.adapter.HistoryAdapter
@@ -43,54 +45,68 @@ class HistoryFragment : Fragment() {
         _binding = FragmentHistoryBinding.inflate(inflater, container, false)
         val view = binding.root
 
-        val locationName = arguments?.getString("mountain_name") ?: "Default Location"
-        binding.titleHistory.text = "History in $locationName"
-
-        // Initialize RecyclerView
-        recyclerView = view.findViewById(R.id.recyclerViewHistory)
-        recyclerView.layoutManager = LinearLayoutManager(requireContext()).apply {
-            reverseLayout = true
-            stackFromEnd = true
+        if (!FirstActivity.isLoggedIn()) {
+            recyclerView = binding.recyclerViewHistory
+            historyAdapter = HistoryAdapter(emptyList())
+            client = AmazonDynamoDBClient()
+            val dialog = CheckAuthenticationDialogFragment()
+            dialog.show(
+                childFragmentManager,
+                CheckAuthenticationDialogFragment.TAG
+            )
+            dialog.setNavController(findNavController())
         }
+        else {
 
-        // Inicializar o provedor de credenciais do Amazon Cognito
-        val credentialsProvider = CognitoCachingCredentialsProvider(
-            requireContext(),
-            "eu-north-1:7c834096-3ddd-4282-a809-4390e3e5686a", // ID do grupo de identidades
-            Regions.EU_NORTH_1 // Região
-        )
+            val locationName = arguments?.getString("mountain_name") ?: "Default Location"
+            binding.titleHistory.text = "History in $locationName"
 
-        // Inicializar o cliente para acesso ao DynamoDB
-        client = AmazonDynamoDBClient(credentialsProvider, ClientConfiguration())
+            // Initialize RecyclerView
+            recyclerView = view.findViewById(R.id.recyclerViewHistory)
+            recyclerView.layoutManager = LinearLayoutManager(requireContext()).apply {
+                reverseLayout = true
+                stackFromEnd = true
+            }
 
-        // Busca os dados do DynamoDB em uma thread separada
-        val thread = Thread {
-            val fetchedHistory = fetchHistoryFromDynamoDB(locationName)
-            requireActivity().runOnUiThread {
-                if (fetchedHistory.isNotEmpty()) {
-                    historyAdapter = HistoryAdapter(fetchedHistory)
-                    recyclerView.adapter = historyAdapter
-                } else {
-                    Toast.makeText(
-                        requireContext(),
-                        "No data found for $locationName",
-                        Toast.LENGTH_SHORT
-                    ).show()
+            // Inicializar o provedor de credenciais do Amazon Cognito
+            val credentialsProvider = CognitoCachingCredentialsProvider(
+                requireContext(),
+                "eu-north-1:7c834096-3ddd-4282-a809-4390e3e5686a", // ID do grupo de identidades
+                Regions.EU_NORTH_1 // Região
+            )
+
+            // Inicializar o cliente para acesso ao DynamoDB
+            client = AmazonDynamoDBClient(credentialsProvider, ClientConfiguration())
+
+            // Busca os dados do DynamoDB em uma thread separada
+            val thread = Thread {
+                val fetchedHistory = fetchHistoryFromDynamoDB(locationName)
+                requireActivity().runOnUiThread {
+                    if (fetchedHistory.isNotEmpty()) {
+                        historyAdapter = HistoryAdapter(fetchedHistory)
+                        recyclerView.adapter = historyAdapter
+                    } else {
+                        Toast.makeText(
+                            requireContext(),
+                            "No data found for $locationName",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
-        }
-        thread.start()
+            thread.start()
 
-        val viewAnotherDateButton = view.findViewById<Button>(R.id.viewAnotherDate)
-        viewAnotherDateButton.setOnClickListener {
-            val mountainName = arguments?.getString("mountain_name")
+            val viewAnotherDateButton = view.findViewById<Button>(R.id.viewAnotherDate)
+            viewAnotherDateButton.setOnClickListener {
+                val mountainName = arguments?.getString("mountain_name")
 
-            // Crie um bundle e passe o nome da montanha
-            val bundle = Bundle().apply {
-                putString("mountain_name", mountainName)
+                // Crie um bundle e passe o nome da montanha
+                val bundle = Bundle().apply {
+                    putString("mountain_name", mountainName)
+                }
+
+                findNavController().navigate(R.id.navigation_select_history, bundle)
             }
-
-            findNavController().navigate(R.id.navigation_select_history, bundle)
         }
 
         return view
@@ -108,16 +124,18 @@ class HistoryFragment : Fragment() {
         try {
             val attributeValue = AttributeValue().withS(locationName)
             // Configurar os parâmetros da consulta, agora filtrando pelo nome da montanha
-            val request = ScanRequest()
-                .withTableName("safe_climb") // Substitua pelo nome da sua tabela no DynamoDB
-                .withFilterExpression("mountain = :mountainName")
-                .addExpressionAttributeValuesEntry(":mountainName", attributeValue)
+            val request = QueryRequest()
+                .withTableName("safe_climb")
+                .withKeyConditionExpression("mountain = :mountainName")
+                .withExpressionAttributeValues(mapOf(":mountainName" to attributeValue))
+                .withScanIndexForward(false)
+                .withLimit(100)
 
             // Adicionar log para verificar o estado da solicitação
             Log.d("DynamoDB", "Executing scan with request: $request")
 
             // Executar o scan no DynamoDB
-            val result = client.scan(request)
+            val result = client.query(request)
 
             Log.d("DynamoDB", "Scan result: $result")
 

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/initial_navigation"
+    app:startDestination="@+id/navigation_home">
+
+    <fragment
+        android:id="@+id/navigation_home"
+        android:name="com.example.myapplication.ui.fragment.HomeFragment"
+        android:label="SafeClimb"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/navigation_auth"
+        android:name="com.example.myapplication.ui.fragment.AuthFragment"
+        android:label="Authentication"
+        tools:layout="@layout/fragment_auth" />
+
+    <fragment
+        android:id="@+id/navigation_user_creation"
+        android:name="com.example.myapplication.ui.fragment.UserCreationFragment"
+        android:label="Create New User"
+        tools:layout="@layout/fragment_user_creation" />
+
+</navigation>

@@ -59,4 +59,38 @@
         android:label="SafeClimb Bot"
         tools:layout="@layout/fragment_chat" />
 
+    <fragment
+        android:id="@+id/navigation_user_edit"
+        android:name="com.example.myapplication.ui.fragment.UserEditFragment"
+        android:label="Edit User"
+        tools:layout="@layout/fragment_user_edit" />
+
+    <fragment
+        android:id="@+id/navigation_start_climb"
+        android:name="com.example.myapplication.ui.fragment.StartClimbFragment"
+        android:label="Start Climb"
+        tools:layout="@layout/fragment_start_climb" />
+
+    <fragment
+        android:id="@+id/navigation_save_mountain"
+        android:name="com.example.myapplication.ui.fragment.SaveMountainFragment"
+        android:label="Save Mountain"
+        tools:layout="@layout/fragment_save_climb" >
+        <argument
+            android:name="timeBase"
+            app:argType="long" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_mountain_history"
+        android:name="com.example.myapplication.ui.fragment.MountainHistoryFragment"
+        android:label="Climb History"
+        tools:layout="@layout/fragment_mountain_history" />
+
+    <fragment
+        android:id="@+id/navigation_gallery"
+        android:name="com.example.myapplication.ui.fragment.GalleryFragment"
+        android:label="Gallery"
+        tools:layout="@layout/fragment_gallery" />
+
 </navigation>

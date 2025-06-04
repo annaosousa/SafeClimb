@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.aws.sdk.dynamodb)
     implementation(libs.aws.android.sdk.mobile.client)
     implementation(libs.aws.android.sdk.ddb.document)
+    implementation(libs.androidx.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

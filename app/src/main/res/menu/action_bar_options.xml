@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_username"
+        android:enabled="false"
+        android:title="Username"
+        app:showAsAction="never" />
+
+    <item android:id="@+id/action_gallery"
+        android:title="Gallery"
+        app:showAsAction="never"/>
+
+    <item android:id="@+id/mountain_history"
+        android:title="Climb History"
+        app:showAsAction="never"/>
+
+    <item android:id="@+id/action_account"
+        android:title="Account Settings"
+        app:showAsAction="never"/>
+
+    <item android:id="@+id/action_logout"
+        android:title="Log Out"
+        app:showAsAction="never"/>
+
+    <item android:id="@+id/action_login"
+        android:title="Log In"
+        app:showAsAction="never"/>
+
+</menu>

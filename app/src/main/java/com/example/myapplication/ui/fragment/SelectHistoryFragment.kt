@@ -21,6 +21,7 @@ import com.amazonaws.regions.Regions
 import com.example.myapplication.databinding.FragmentSelectHistoryBinding
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
+import com.amazonaws.services.dynamodbv2.model.QueryRequest
 import com.amazonaws.services.dynamodbv2.model.ScanRequest
 import com.amazonaws.services.dynamodbv2.model.ScanResult
 import com.example.myapplication.R
@@ -184,33 +185,18 @@ class SelectHistoryFragment : Fragment() {
         try {
             val mountainNameAttributeValue = AttributeValue().withS(mountainName)
             val timeStampAttributeValue = AttributeValue().withS("$timestamp")
-            // Configurar os parâmetros da consulta, agora filtrando pelo nome da montanha
-            var request = ScanRequest()
+
+            val request = QueryRequest()
                 .withTableName("safe_climb")
-                .withFilterExpression("mountain = :mountainName and #ts = :datetime")
+                .withKeyConditionExpression("mountain = :mountainName AND #ts <= :final_datetime")
                 .withExpressionAttributeNames(mapOf("#ts" to "timestamp"))
                 .addExpressionAttributeValuesEntry(":mountainName", mountainNameAttributeValue)
-                .addExpressionAttributeValuesEntry(":datetime", timeStampAttributeValue)
+                .addExpressionAttributeValuesEntry(":final_datetime", timeStampAttributeValue)
+                .withScanIndexForward(false)
+                .withLimit(100)
 
-            // Executar o scan no DynamoDB
-            var result = client.scan(request)
+            val result = client.query(request)
 
-            if (result.items.isEmpty()) {
-                val initialTimestamp = timestamp - TIMESTAMP_OFFSET
-                val finalTimestamp = timestamp + TIMESTAMP_OFFSET
-                val initialTimestampAttributeValue = AttributeValue().withS("$initialTimestamp")
-                val finalTimestampAttributeValue = AttributeValue().withS("$finalTimestamp")
-
-                request = ScanRequest()
-                    .withTableName("safe_climb")
-                    .withFilterExpression("mountain = :mountainName and #ts >= :initial_datetime and #ts <= :final_datetime")
-                    .withExpressionAttributeNames(mapOf("#ts" to "timestamp"))
-                    .addExpressionAttributeValuesEntry(":mountainName", mountainNameAttributeValue)
-                    .addExpressionAttributeValuesEntry(":initial_datetime", initialTimestampAttributeValue)
-                    .addExpressionAttributeValuesEntry(":final_datetime", finalTimestampAttributeValue)
-
-                result = client.scan(request)
-            }
 
             for (item in result.items) {
                 val rawTimestamp = item["timestamp"]?.s
@@ -242,7 +228,7 @@ class SelectHistoryFragment : Fragment() {
                         if (payload != null) {
                             val windSpeed = payload["wind_speed"]?.n?.toDoubleOrNull()?.let { "$it km/h" } ?: "Unknown"
                             val humidity = payload["humidity"]?.n?.toDoubleOrNull()?.let { "$it%" } ?: "Unknown"
-                            val temperature = payload["temperature"]?.n?.toDoubleOrNull()?.let { "$it°C" } ?: "Unknown"
+                            val temperature = payload["temperature"]?.n?.toDoubleOrNull()?.let { "${it/10}°C" } ?: "Unknown"
                             val precipitation = payload["precipitation"]?.n?.toDoubleOrNull()?.let { "$it %" } ?: "Unknown"
                             val soil = payload["soil_moisture"]?.n?.toDoubleOrNull()?.let { "$it%" } ?: "Unknown"
 
