@@ -56,52 +56,51 @@
             android:text="Stop" />
     </LinearLayout>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraintLayout2"
+    <TextView
+        android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="50dp"
+        android:layout_marginBottom="15dp"
+        android:text="Take a picture\n of your climb"
+        android:textAlignment="center"
+        android:textColor="#040000"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toTopOf="@+id/picture_card"
+        app:layout_constraintEnd_toEndOf="@+id/picture_card"
+        app:layout_constraintStart_toStartOf="@+id/picture_card" />
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/picture_card"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginBottom="80dp"
+        android:elevation="10dp"
+        app:cardCornerRadius="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.25"
         app:layout_constraintStart_toStartOf="parent">
 
-        <TextView
-            android:id="@+id/textView2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:text="Take a picture\n of your climb"
-            android:textAlignment="center"
-            android:textColor="#040000"
-            android:textSize="20sp"
-            app:layout_constraintBottom_toTopOf="@+id/pictureIcon"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
-
         <ImageButton
             android:id="@+id/pictureIcon"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:backgroundTint="#004CAF50"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#4CAF50"
             android:scaleType="centerCrop"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
             app:srcCompat="@drawable/camera"
-            app:tint="#4CAF50" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            app:tint="#424242" />
+    </androidx.cardview.widget.CardView>
 
     <androidx.cardview.widget.CardView
         android:layout_width="80dp"
         android:layout_height="80dp"
-        app:layout_constraintBottom_toBottomOf="@+id/constraintLayout2"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/constraintLayout2"
-        app:layout_constraintTop_toTopOf="@+id/constraintLayout2"
+        android:layout_marginBottom="80dp"
+        android:elevation="10dp"
         app:cardCornerRadius="8dp"
-        android:layout_margin="5dp"
-        android:elevation="10dp">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.75"
+        app:layout_constraintStart_toStartOf="parent">
 
         <ImageView
             android:id="@+id/gallery_thumb"

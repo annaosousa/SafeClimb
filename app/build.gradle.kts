@@ -4,11 +4,19 @@ plugins {
 }
 
 android {
-    namespace = "com.example.myapplication"
+    signingConfigs {
+        create("release") {
+            storeFile = file("/home/pedro/Android/Keys/safeclimb_key")
+            storePassword = "ativedk012ky567"
+            keyAlias = "key0"
+            keyPassword = "ativedk012ky567"
+        }
+    }
+    namespace = "com.utfpr.safeclimb"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.myapplication"
+        applicationId = "com.utfpr.safeclimb"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
@@ -24,6 +32,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 

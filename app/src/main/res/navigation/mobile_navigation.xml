@@ -7,73 +7,73 @@
 
     <fragment
         android:id="@+id/navigation_home"
-        android:name="com.example.myapplication.ui.fragment.SearchFragment"
+        android:name="com.utfpr.safeclimb.ui.fragment.SearchFragment"
         android:label="@string/title_home"
         tools:layout="@layout/fragment_search" />
 
     <fragment
         android:id="@+id/bot_informations"
-        android:name="com.example.myapplication.ui.fragment.BotFragment"
+        android:name="com.utfpr.safeclimb.ui.fragment.BotFragment"
         android:label="Bot"
         tools:layout="@layout/fragment_bot" />
 
     <fragment
         android:id="@+id/navigation_map"
-        android:name="com.example.myapplication.ui.fragment.MapFragment"
+        android:name="com.utfpr.safeclimb.ui.fragment.MapFragment"
         android:label="@string/title_dashboard"
         tools:layout="@layout/fragment_map" />
 
     <fragment
         android:id="@+id/navigation_map_mountain"
-        android:name="com.example.myapplication.ui.fragment.MapMountainFragment"
+        android:name="com.utfpr.safeclimb.ui.fragment.MapMountainFragment"
         android:label="Map Mountain"
         tools:layout="@layout/fragment_map_mountain" />
 
     <fragment
         android:id="@+id/navigation_faq"
-        android:name="com.example.myapplication.ui.fragment.FaqFragment"
+        android:name="com.utfpr.safeclimb.ui.fragment.FaqFragment"
         android:label="@string/title_faq"
         tools:layout="@layout/fragment_faq" />
 
     <fragment
         android:id="@+id/navigation_result"
-        android:name="com.example.myapplication.ui.fragment.ResultFragment"
+        android:name="com.utfpr.safeclimb.ui.fragment.ResultFragment"
         android:label="History"
         tools:layout="@layout/fragment_result" />
 
     <fragment
         android:id="@+id/navigation_history"
-        android:name="com.example.myapplication.ui.fragment.HistoryFragment"
+        android:name="com.utfpr.safeclimb.ui.fragment.HistoryFragment"
         android:label="Result"
         tools:layout="@layout/fragment_history" />
 
     <fragment
         android:id="@+id/navigation_select_history"
-        android:name="com.example.myapplication.ui.fragment.SelectHistoryFragment"
+        android:name="com.utfpr.safeclimb.ui.fragment.SelectHistoryFragment"
         android:label="Select History"
         tools:layout="@layout/fragment_select_history" />
 
     <fragment
         android:id="@+id/navigation_bot_dialog"
-        android:name="com.example.myapplication.ui.fragment.ChatFragment"
+        android:name="com.utfpr.safeclimb.ui.fragment.ChatFragment"
         android:label="SafeClimb Bot"
         tools:layout="@layout/fragment_chat" />
 
     <fragment
         android:id="@+id/navigation_user_edit"
-        android:name="com.example.myapplication.ui.fragment.UserEditFragment"
+        android:name="com.utfpr.safeclimb.ui.fragment.UserEditFragment"
         android:label="Edit User"
         tools:layout="@layout/fragment_user_edit" />
 
     <fragment
         android:id="@+id/navigation_start_climb"
-        android:name="com.example.myapplication.ui.fragment.StartClimbFragment"
+        android:name="com.utfpr.safeclimb.ui.fragment.StartClimbFragment"
         android:label="Start Climb"
         tools:layout="@layout/fragment_start_climb" />
 
     <fragment
         android:id="@+id/navigation_save_mountain"
-        android:name="com.example.myapplication.ui.fragment.SaveMountainFragment"
+        android:name="com.utfpr.safeclimb.ui.fragment.SaveMountainFragment"
         android:label="Save Mountain"
         tools:layout="@layout/fragment_save_climb" >
         <argument
@@ -82,14 +82,24 @@
     </fragment>
 
     <fragment
+        android:id="@+id/navigation_image_details"
+        android:name="com.utfpr.safeclimb.ui.fragment.ImageDetailFragment"
+        android:label="Image Details"
+        tools:layout="@layout/fragment_image_detail" >
+        <argument
+            android:name="imageUri"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
         android:id="@+id/navigation_mountain_history"
-        android:name="com.example.myapplication.ui.fragment.MountainHistoryFragment"
+        android:name="com.utfpr.safeclimb.ui.fragment.MountainHistoryFragment"
         android:label="Climb History"
         tools:layout="@layout/fragment_mountain_history" />
 
     <fragment
         android:id="@+id/navigation_gallery"
-        android:name="com.example.myapplication.ui.fragment.GalleryFragment"
+        android:name="com.utfpr.safeclimb.ui.fragment.GalleryFragment"
         android:label="Gallery"
         tools:layout="@layout/fragment_gallery" />
 
